@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0e1119">
+<link rel="apple-touch-icon" href="assets/icons/icon-192.png">
+<link rel="icon" href="assets/icons/icon-96.png" type="image/png">
+<title>Carte des langues nationales — Bénin Vivant</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+
+:root{
+  /* --- Palette : tissus appliqués royaux d'Abomey + patrimoine bâti --- */
+  --nuit:#0e1119;
+  --nuit-2:#141826;
+  --panneau:#171d2c;
+  --panneau-2:#1e2740;
+  --bordure:rgba(236,226,204,.1);
+  --or:#c99a2e;
+  --or-clair:#e3bc5c;
+  --rouge-vodun:#8c3a2c;
+  --vert-patine:#3f6653;
+  --parchemin:#ece2cc;
+  --parchemin-att:#a7a08e;
+
+  --serif:'Fraunces', serif;
+  --sans:'Inter', sans-serif;
+  --mono:'JetBrains Mono', monospace;
+
+  --container: 1180px;
+}
+
+*{box-sizing:border-box; margin:0; padding:0;}
+html{scroll-behavior:smooth;}
+body{
+  background:var(--nuit);
+  color:var(--parchemin);
+  font-family:var(--sans);
+  font-size:16px;
+  line-height:1.65;
+  -webkit-font-smoothing:antialiased;
+}
+a{color:inherit; text-decoration:none;}
+img{max-width:100%; display:block;}
+.wrap{max-width:var(--container); margin:0 auto; padding:0 2.5rem;}
+
+/* ---------- motif signature : bandeau appliqué géométrique (Danxomè) ---------- */
+.bandeau-motif{
+  height:10px; width:100%;
+  background:
+    linear-gradient(135deg, var(--or) 25%, transparent 25%) -6px 0,
+    linear-gradient(225deg, var(--or) 25%, transparent 25%) -6px 0,
+    linear-gradient(315deg, var(--or) 25%, transparent 25%),
+    linear-gradient(45deg, var(--or) 25%, transparent 25%);
+  background-size:12px 12px;
+  opacity:.8;
+}
+
+/* ---------- navigation ---------- */
+header.site-nav{
+  position:sticky; top:0; z-index:100;
+  background:rgba(14,17,25,.9); backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--bordure);
+}
+.nav-inner{display:flex; align-items:center; justify-content:space-between; padding:1.3rem 0;}
+.logo{font-family:var(--serif); font-size:1.25rem; font-weight:600;}
+.logo span{color:var(--or);}
+.nav-links{display:flex; align-items:center; gap:2.1rem; font-size:.9rem;}
+.nav-links a{color:var(--parchemin-att); transition:color .2s;}
+.nav-links a:hover, .nav-links a.active{color:var(--or-clair);}
+.nav-cta{
+  padding:.65rem 1.3rem; border:1px solid var(--or); border-radius:3px;
+  color:var(--or-clair) !important; font-weight:500; font-size:.85rem;
+}
+.nav-cta:hover{background:var(--or); color:var(--nuit) !important;}
+
+/* ---------- boutons ---------- */
+.btn{
+  display:inline-flex; align-items:center; gap:.5rem;
+  font-family:var(--sans); font-weight:500; font-size:.92rem;
+  padding:.9rem 1.7rem; border-radius:3px; cursor:pointer; border:1px solid transparent;
+  transition:transform .2s ease, background .2s ease, border-color .2s ease;
+}
+.btn-primary{background:var(--or); color:#241a05;}
+.btn-primary:hover{background:var(--or-clair); transform:translateY(-2px);}
+.btn-ghost{border-color:rgba(236,226,204,.3); color:var(--parchemin); background:transparent;}
+.btn-ghost:hover{border-color:var(--or); color:var(--or-clair);}
+
+/* ---------- eyebrow / labels ---------- */
+.eyebrow{
+  font-family:var(--mono); font-size:.74rem; letter-spacing:.13em; text-transform:uppercase;
+  color:var(--or); display:flex; align-items:center; gap:.6rem; margin-bottom:1rem;
+}
+.eyebrow::before{content:''; width:20px; height:1px; background:var(--or);}
+.eyebrow.alt{color:var(--vert-patine);}
+.eyebrow.alt::before{background:var(--vert-patine);}
+
+/* ---------- sections génériques ---------- */
+section{padding:5.5rem 0;}
+.section-head{max-width:640px; margin-bottom:3rem;}
+.section-head h2{font-family:var(--serif); font-weight:500; font-size:2.2rem; color:var(--parchemin);}
+.section-head p{color:var(--parchemin-att); margin-top:.9rem; font-size:1rem;}
+.section-head.center{margin-left:auto; margin-right:auto; text-align:center;}
+
+/* ---------- stats institutionnelles ---------- */
+.stats-bar{
+  display:grid; grid-template-columns:repeat(4,1fr);
+  border:1px solid var(--bordure); border-radius:4px; overflow:hidden;
+  background:var(--panneau);
+}
+.stat{padding:2rem 1.5rem; text-align:center; border-right:1px solid var(--bordure);}
+.stat:last-child{border-right:none;}
+.stat .num{font-family:var(--serif); font-size:2.3rem; color:var(--or-clair); font-weight:500;}
+.stat .lbl{font-size:.82rem; color:var(--parchemin-att); margin-top:.3rem;}
+
+/* ---------- cartes / grilles ---------- */
+.card-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:var(--bordure); border:1px solid var(--bordure);}
+.card{background:var(--panneau); padding:2.1rem 1.7rem; transition:background .25s;}
+.card:hover{background:var(--panneau-2);}
+.card .num{font-family:var(--mono); font-size:.74rem; color:var(--or); display:block; margin-bottom:1rem;}
+.card h3{font-family:var(--serif); font-size:1.12rem; font-weight:500; margin-bottom:.55rem;}
+.card p{font-size:.87rem; color:var(--parchemin-att);}
+
+/* ---------- fiches sites/ethnies (image + texte) ---------- */
+.tile{background:var(--panneau); border:1px solid var(--bordure); border-radius:4px; overflow:hidden; transition:transform .25s, border-color .25s;}
+.tile:hover{transform:translateY(-4px); border-color:rgba(201,154,46,.4);}
+.tile-media{height:170px; position:relative; overflow:hidden;}
+.tile-media svg{width:100%; height:100%;}
+.tile-tag{
+  position:absolute; top:.9rem; left:.9rem; background:rgba(14,17,25,.75);
+  font-family:var(--mono); font-size:.68rem; padding:.3rem .6rem; border-radius:2px;
+  color:var(--or-clair); letter-spacing:.05em; text-transform:uppercase;
+}
+.tile-body{padding:1.4rem 1.5rem;}
+.tile-body h3{font-family:var(--serif); font-size:1.15rem; margin-bottom:.5rem;}
+.tile-body p{font-size:.86rem; color:var(--parchemin-att); margin-bottom:1rem;}
+.tile-meta{display:flex; justify-content:space-between; align-items:center; font-size:.78rem; color:var(--parchemin-att); font-family:var(--mono);}
+
+/* ---------- frise chronologique ---------- */
+.frise-wrap{overflow-x:auto; padding-bottom:.5rem;}
+.frise{display:flex; min-width:920px; position:relative; padding-top:2.4rem;}
+.frise::before{content:''; position:absolute; top:0; left:0; right:0; height:1px; background:linear-gradient(90deg, transparent, var(--or) 8%, var(--or) 92%, transparent);}
+.frise-item{flex:1; position:relative; padding:0 1.1rem;}
+.frise-item::before{content:''; position:absolute; top:-2.4rem; left:1.1rem; width:9px; height:9px; border-radius:50%; background:var(--or);}
+.frise-item .annee{font-family:var(--mono); font-size:.76rem; color:var(--or); display:block; margin-bottom:.4rem;}
+.frise-item h4{font-family:var(--serif); font-size:1rem; margin-bottom:.35rem;}
+.frise-item p{font-size:.8rem; color:var(--parchemin-att);}
+
+/* ---------- citation / témoignage ---------- */
+.quote-block{
+  border-left:2px solid var(--or); padding-left:2rem; max-width:680px;
+}
+.quote-block p{font-family:var(--serif); font-size:1.35rem; font-style:italic; line-height:1.5; color:var(--parchemin);}
+.quote-block .who{margin-top:1.2rem; font-family:var(--mono); font-size:.8rem; color:var(--parchemin-att);}
+
+/* ---------- CTA bandeau ---------- */
+.cta-band{
+  background:var(--panneau-2); border:1px solid var(--bordure); border-radius:4px;
+  padding:3.2rem 3rem; display:flex; align-items:center; justify-content:space-between; gap:2rem;
+}
+.cta-band h3{font-family:var(--serif); font-size:1.6rem; font-weight:500; max-width:26ch;}
+.cta-actions{display:flex; gap:.9rem; flex-shrink:0;}
+
+/* ---------- footer ---------- */
+footer{border-top:1px solid var(--bordure); padding:3.5rem 0 2rem;}
+.footer-grid{display:grid; grid-template-columns:1.4fr 1fr 1fr 1fr; gap:2.5rem; padding-bottom:2.5rem;}
+.footer-grid h4{font-family:var(--serif); font-size:1rem; margin-bottom:1rem; color:var(--parchemin);}
+.footer-grid p, .footer-grid a{font-size:.86rem; color:var(--parchemin-att); display:block; margin-bottom:.55rem;}
+.footer-grid a:hover{color:var(--or-clair);}
+.footer-bottom{
+  border-top:1px solid var(--bordure); padding-top:1.5rem;
+  display:flex; justify-content:space-between; font-size:.78rem; color:var(--parchemin-att); font-family:var(--mono);
+}
+
+/* ---------- utilitaires ---------- */
+.grid-2{display:grid; grid-template-columns:1fr 1fr; gap:3.5rem; align-items:center;}
+.badge{
+  display:inline-block; font-family:var(--mono); font-size:.7rem; padding:.25rem .6rem;
+  border:1px solid rgba(63,102,83,.4); color:var(--vert-patine); border-radius:2px; margin-bottom:.5rem;
+}
+
+@media (max-width:900px){
+  .wrap{padding:0 1.4rem;}
+  .stats-bar{grid-template-columns:repeat(2,1fr);}
+  .card-grid{grid-template-columns:1fr;}
+  .grid-2{grid-template-columns:1fr;}
+  .footer-grid{grid-template-columns:1fr 1fr;}
+  .cta-band{flex-direction:column; align-items:flex-start;}
+}
+
+
+#carteLangues{height:460px; border-radius:5px; border:1px solid var(--bordure); filter:saturate(.85) brightness(.95);}
+.mot-card{background:var(--panneau); border:1px solid var(--bordure); border-radius:5px; padding:1.1rem 1.3rem; display:flex; justify-content:space-between; align-items:center; margin-bottom:.7rem;}
+.mot-card .fr{color:var(--parchemin-att); font-size:.82rem;}
+.play-btn{width:32px; height:32px; border-radius:50%; background:var(--panneau-2); border:1px solid var(--bordure); display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0;}
+</style>
+</head>
+<body>
+
+<header class="site-nav" id="bv-header"></header>
+<div class="bandeau-motif"></div>
+
+<section style="padding-bottom:2rem;">
+  <div class="wrap">
+    <div class="eyebrow alt">Module 5</div>
+    <h1 style="font-family:var(--serif); font-weight:500; font-size:2.3rem; max-width:18ch;">Carte des langues nationales</h1>
+    <p style="color:var(--parchemin-att); margin-top:1rem; max-width:56ch;">Explorez les langues parlées à travers le Bénin, avec mots-clés, expressions et prononciation audio par région.</p>
+  </div>
+</section>
+
+<section style="padding-top:0;">
+  <div class="wrap grid-2" style="align-items:start; gap:2.5rem;">
+    <div id="carteLangues"></div>
+    <div>
+      <div class="badge" id="regionBadge" style="margin-bottom:.8rem;">Sélectionnez une langue sur la carte</div>
+      <h3 id="langueTitre" style="font-family:var(--serif); font-size:1.3rem; margin-bottom:1rem;">—</h3>
+      <div id="motsListe"><p style="color:var(--parchemin-att); font-size:.85rem;">Chargement des langues...</p></div>
+    </div>
+  </div>
+</section>
+
+<footer id="bv-footer"></footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="assets/js/env.js"></script>
+<script src="assets/js/bv-api.js"></script>
+<script>
+const map = L.map('carteLangues', {scrollWheelZoom:false}).setView([9.3, 2.3], 6);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution:'&copy; OpenStreetMap'}).addTo(map);
+
+const COULEURS = ['#c99a2e', '#8c3a2c', '#3f6653', '#e3bc5c', '#5c7cb8', '#a86dbd'];
+let languesData = [];
+
+function afficherMots(langue) {
+  document.getElementById('regionBadge').textContent = `Région : ${langue.zone_geographique || 'non renseignée'}`;
+  document.getElementById('langueTitre').textContent = `${langue.nom} — mots essentiels`;
+
+  if (!langue.mots || !langue.mots.length) {
+    document.getElementById('motsListe').innerHTML = '<p style="color:var(--parchemin-att); font-size:.85rem;">Aucun mot-clé enregistré pour cette langue pour le moment.</p>';
+    return;
+  }
+
+  document.getElementById('motsListe').innerHTML = langue.mots.map(m => `
+    <div class="mot-card">
+      <div><strong>${m.mot_expression}</strong><div class="fr">${m.traduction_fr}</div></div>
+      <div class="play-btn" onclick="${m.audio_url ? `new Audio('${m.audio_url}').play()` : "alert('Prononciation audio à venir pour ce mot.')"}">▶</div>
+    </div>`).join('');
+}
+
+async function chargerLangues() {
+  try {
+    languesData = await BeninVivantAPI.listLangues();
+
+    languesData.forEach((langue, i) => {
+      if (!langue.latitude_centre || !langue.longitude_centre) return;
+      const couleur = COULEURS[i % COULEURS.length];
+      L.circle([langue.latitude_centre, langue.longitude_centre], {
+        radius: 35000, color: couleur, fillColor: couleur, fillOpacity: .25, weight: 1.5,
+      }).addTo(map)
+        .bindPopup(`<strong>${langue.nom}</strong>`)
+        .on('click', () => afficherMots(langue));
+    });
+
+    if (languesData.length) afficherMots(languesData[0]);
+  } catch (err) {
+    document.getElementById('motsListe').innerHTML = `<p style="color:#e08a75; font-size:.85rem;">⚠ ${err.message || 'API non joignable.'}</p>`;
+  }
+}
+chargerLangues();
+</script>
+<script src="assets/js/pwa-register.js" defer></script>
+  <script src="assets/js/site-nav.js"></script>
+  <script src="assets/js/site-footer.js"></script>
+</body>
+</html>

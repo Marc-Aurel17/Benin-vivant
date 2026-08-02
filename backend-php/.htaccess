@@ -1,0 +1,17 @@
+# Bloque l'accès direct aux fichiers de configuration depuis le navigateur
+<FilesMatch "\.(env|sql|md)$">
+    Require all denied
+</FilesMatch>
+
+# Désactive le listing de dossier (évite de révéler la structure du projet)
+Options -Indexes
+
+# Masque les erreurs serveur détaillées (pas de fuite d'infos en prod)
+php_flag display_errors off
+
+# En-têtes de sécurité de base (en complément de ceux envoyés par PHP)
+<IfModule mod_headers.c>
+    Header always set X-Frame-Options "DENY"
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
