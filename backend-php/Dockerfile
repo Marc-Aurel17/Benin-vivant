@@ -16,8 +16,6 @@ RUN sed -i '/<Directory \/var\/www\/>/,/<\/Directory>/ s/AllowOverride None/Allo
 # Contenu du dossier backend-php/ copié tel quel comme racine du site Apache.
 COPY . /var/www/html/
 
-RUN sed -i 's!/var/www/html!/var/www/html/public!g' /etc/apache2/sites-available/000-default.conf
-
 # Le dossier uploads/ doit être inscriptible par Apache (www-data) pour les
 # téléversements (médiathèque, pièces d'identité, etc.).
 RUN chown -R www-data:www-data /var/www/html/uploads
