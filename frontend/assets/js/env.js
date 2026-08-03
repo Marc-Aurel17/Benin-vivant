@@ -9,4 +9,4 @@
  * suivie de "/api". Exemple :
  *   window.BENIN_VIVANT_API_BASE = 'https://benin-vivant-backend.onrender.com/api';
  */
-window.BENIN_VIVANT_API_BASE = 'https://benin-vivant-backend.onrender.com/api';
+window.BENIN_VIVANT_API_BASE = 'https://benin-vivant-backend-q4nt.onrender.com/api';
