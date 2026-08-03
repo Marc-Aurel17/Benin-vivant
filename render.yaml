@@ -1,0 +1,80 @@
+# Blueprint Render — Bénin Vivant
+#
+# Utilisation :
+# 1. Pousse ce fichier (et tout le projet) sur GitHub.
+# 2. Sur https://dashboard.render.com → New → Blueprint → sélectionne ton repo.
+# 3. Render lit ce fichier et propose de créer les 3 services d'un coup.
+# 4. Renseigne les variables marquées "sync: false" (secrets) dans le
+#    dashboard au moment de la création — Render ne les met jamais dans ce
+#    fichier pour éviter de committer un secret en clair.
+# 5. La base de données MySQL n'est PAS gérée par ce blueprint (Render n'a
+#    pas de MySQL managé) : crée-la à part sur Aiven (voir docs), puis
+#    renseigne DB_HOST / DB_USER / DB_PASS / DB_SSL_CA dans le dashboard.
+
+services:
+  # --- Backend PHP (Docker) -------------------------------------------------
+  - type: web
+    name: benin-vivant-backend
+    runtime: docker
+    dockerfilePath: ./backend-php/Dockerfile
+    dockerContext: ./backend-php
+    plan: free
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_URL
+        sync: false          # ex: https://benin-vivant-backend.onrender.com
+      - key: FRONTEND_URL
+        sync: false          # ex: https://benin-vivant-frontend.onrender.com
+      - key: AI_SERVICE_URL
+        sync: false          # ex: https://benin-vivant-ai.onrender.com
+      - key: AI_SERVICE_API_KEY
+        sync: false          # même valeur que côté ai-service
+      - key: DB_HOST
+        sync: false
+      - key: DB_PORT
+        value: "3306"
+      - key: DB_NAME
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASS
+        sync: false
+      - key: DB_SSL_CA
+        value: /var/www/html/config/ca.pem   # doit exister dans le repo
+
+  # --- Microservice IA (Python natif, pas de Dockerfile nécessaire) --------
+  - type: web
+    name: benin-vivant-ai-service
+    runtime: python
+    rootDir: ai-service
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    plan: free
+    envVars:
+      - key: DB_HOST
+        sync: false
+      - key: DB_PORT
+        value: "3306"
+      - key: DB_NAME
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: AI_SERVICE_API_KEY
+        sync: false          # même valeur que côté backend-php
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: ANTHROPIC_MODEL
+        value: claude-sonnet-5
+      - key: EXTRA_ALLOWED_ORIGIN
+        sync: false          # ex: https://benin-vivant-frontend.onrender.com
+
+  # --- Frontend statique ----------------------------------------------------
+  - type: web
+    name: benin-vivant-frontend
+    runtime: static
+    rootDir: frontend
+    buildCommand: "echo 'pas de build, fichiers statiques'"
+    staticPublishPath: .
