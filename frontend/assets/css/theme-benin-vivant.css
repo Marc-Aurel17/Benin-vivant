@@ -1,0 +1,91 @@
+/* ==========================================================================
+   BÉNIN VIVANT — Thème officiel v2 (pack fourni par Marc), avec bascule
+   clair/sombre.
+
+   Comment ça marche : chaque page du site utilise déjà des variables CSS
+   (--nuit, --or, --parchemin, etc.) dans son propre <style> inline. Plutôt
+   que de réécrire les 70 pages avec les nouvelles classes du pack (bv-navbar,
+   bv-card...), ce fichier redéfinit CES MÊMES variables avec les nouvelles
+   couleurs (vert/jaune/rouge Bénin). Comme il est chargé APRÈS le <style>
+   de chaque page, ses valeurs l'emportent — le contenu et la mise en page
+   ne bougent pas, seules les couleurs/polices changent.
+
+   Le mode clair est la valeur par défaut (:root). Le mode sombre s'active
+   via la classe .bv-theme-dark posée sur <html> par assets/js/theme-toggle.js
+   (bouton ☀/🌙 dans le menu). Si l'utilisateur n'a jamais choisi, le thème
+   suit la préférence système au premier chargement (voir theme-toggle.js).
+   ========================================================================== */
+
+:root {
+  /* --- Palette de référence du pack (couleurs nationales) --- */
+  --bv-primary: #008751;          /* Vert Bénin */
+  --bv-primary-dark: #00633b;
+  --bv-secondary: #FCD116;        /* Jaune Ocre / Or */
+  --bv-secondary-dark: #d9b100;
+  --bv-accent: #E8112D;           /* Rouge Terre & Patrimoine */
+
+  /* --- Mode clair (par défaut) --- */
+  --nuit: #f8f9fa;
+  --nuit-2: #f1f5f3;
+  --panneau: #ffffff;
+  --panneau-2: #f1f5f3;
+  --bordure: #e2e8e5;
+  --or: var(--bv-secondary);
+  --or-clair: var(--bv-secondary-dark);   /* texte sur fond clair : doré plus soutenu, plus lisible */
+  --rouge-vodun: var(--bv-accent);
+  --vert-patine: var(--bv-primary);
+  --parchemin: #1a2521;
+  --parchemin-att: #5a6b63;
+
+  --serif: 'Poppins', 'Fraunces', serif;
+  --sans: 'Inter', sans-serif;
+}
+
+html.bv-theme-dark {
+  --nuit: #0f1714;
+  --nuit-2: #1e2d28;
+  --panneau: #182420;
+  --panneau-2: #1e2d28;
+  --bordure: #2a3d36;
+  --or: var(--bv-secondary);
+  --or-clair: var(--bv-secondary);        /* sur fond sombre, le jaune plein reste lisible */
+  --rouge-vodun: var(--bv-accent);
+  --vert-patine: var(--bv-primary);
+  --parchemin: #f0f4f2;
+  --parchemin-att: #9ab0a6;
+}
+
+/* Avant que theme-toggle.js n'ait tourné (chargement de la page), si le
+   système est en mode sombre et qu'aucun choix n'a été mémorisé, on
+   affiche directement en sombre pour éviter un flash clair→sombre. */
+@media (prefers-color-scheme: dark) {
+  html:not(.bv-theme-light):not(.bv-theme-dark) {
+    --nuit: #0f1714;
+    --nuit-2: #1e2d28;
+    --panneau: #182420;
+    --panneau-2: #1e2d28;
+    --bordure: #2a3d36;
+    --or-clair: var(--bv-secondary);
+    --parchemin: #f0f4f2;
+    --parchemin-att: #9ab0a6;
+  }
+}
+
+/* Bouton de bascule clair/sombre injecté par theme-toggle.js */
+.bv-theme-switch {
+  background: none;
+  border: 1px solid var(--bordure);
+  color: var(--parchemin);
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background .2s;
+}
+.bv-theme-switch:hover {
+  background: var(--panneau-2);
+}

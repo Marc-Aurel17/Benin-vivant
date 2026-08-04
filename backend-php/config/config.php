@@ -4,6 +4,41 @@
  * À inclure en tout premier sur chaque page/endpoint qui a besoin de session.
  */
 
+// --- Gestionnaire d'erreurs global ---------------------------------------
+// Avant ce correctif, une erreur PHP non attrapée (ex: requête SQL en échec)
+// remontait telle quelle : page d'erreur HTML brute côté client, et rien de
+// clair dans les logs Render (juste "500" dans le log d'accès, sans détail).
+// Ici : le vrai message part dans error_log() (visible dans Render → Logs),
+// et le client reçoit toujours du JSON propre, cohérent avec le reste de l'API.
+set_exception_handler(function (Throwable $e) {
+    error_log(sprintf(
+        '[ERREUR NON ATTRAPÉE] %s dans %s:%d — %s',
+        get_class($e), $e->getFile(), $e->getLine(), $e->getMessage()
+    ));
+    if (!headers_sent()) {
+        http_response_code(500);
+        header('Content-Type: application/json; charset=utf-8');
+    }
+    // NOTE : normalement on masquerait le détail en production (risque de fuite
+    // d'infos internes). Pendant la phase de correction de bugs avant le concours,
+    // on l'affiche quand même pour pouvoir diagnostiquer vite depuis le navigateur.
+    // Repasse cette ligne à `$debug = (getenv('APP_ENV') ?: 'local') !== 'production';`
+    // une fois le site stabilisé.
+    $debug = true;
+    echo json_encode([
+        'error' => $debug
+            ? $e->getMessage() . ' (' . get_class($e) . ' @ ' . basename($e->getFile()) . ':' . $e->getLine() . ')'
+            : 'Erreur interne du serveur. Réessaie plus tard.',
+    ], JSON_UNESCAPED_UNICODE);
+    exit;
+});
+set_error_handler(function ($severity, $message, $file, $line) {
+    // Convertit les erreurs PHP classiques (warning, notice...) en exception
+    // pour qu'elles passent aussi par le handler ci-dessus au lieu de fuiter en HTML.
+    if (!(error_reporting() & $severity)) return false;
+    throw new ErrorException($message, 0, $severity, $file, $line);
+});
+
 // Adapte selon ton hôte local XAMPP. En production (Render), ces valeurs
 // viennent des variables d'environnement définies dans le dashboard Render.
 define('APP_URL', getenv('APP_URL') ?: 'http://localhost/backend-php');

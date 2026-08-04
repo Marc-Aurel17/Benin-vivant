@@ -108,6 +108,7 @@
           <div class="bv-nav-mobile-only" style="display:none;">${mobileHtml}</div>
         </nav>
         <a href="mon-espace.html" class="nav-cta">Mon espace</a>
+        <span id="bv-theme-slot"></span>
         <button class="nav-burger" id="bv-nav-burger" type="button" aria-label="Ouvrir le menu" aria-expanded="false">☰</button>
       </div>
     `;

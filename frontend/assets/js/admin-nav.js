@@ -133,7 +133,7 @@
       : `<a href="admin-dashboard.html#recherche">Recherche globale</a>`;
 
     host.innerHTML = `
-      <a href="admin-dashboard.html" class="logo" style="text-decoration:none; margin-bottom:2.2rem; display:block; padding:0 .6rem;">Bénin <span>Vivant</span></a>
+      <a href="admin-dashboard.html" class="logo" style="text-decoration:none; margin-bottom:2.2rem; display:block; padding:0 .6rem;">Bénin <span>Vivant</span> <span id="bv-theme-slot" style="float:right;"></span></a>
       <div class="admin-nav-group">
         <span class="admin-nav-label">Vue d'ensemble</span>
         <nav class="admin-nav">
