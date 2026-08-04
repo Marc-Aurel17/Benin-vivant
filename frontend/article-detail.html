@@ -226,9 +226,9 @@ footer{border-top:1px solid var(--bordure); padding:3.5rem 0 2rem;}
 
     <div class="share-row">
       <span style="font-size:.82rem; color:var(--parchemin-att); align-self:center;">Partager :</span>
-      <div class="share-btn">𝕏</div>
-      <div class="share-btn">f</div>
-      <div class="share-btn">✉</div>
+      <a class="share-btn" id="shareX" href="#" target="_blank" rel="noopener" style="text-decoration:none;">𝕏</a>
+      <a class="share-btn" id="shareFb" href="#" target="_blank" rel="noopener" style="text-decoration:none;">f</a>
+      <a class="share-btn" id="shareMail" href="#" style="text-decoration:none;">✉</a>
     </div>
   </div>
 </section>
@@ -252,6 +252,13 @@ function formaterDate(dateStr) {
   return new Date(dateStr).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
 }
 
+function mettreAJourLiensPartage(titre) {
+  const url = window.location.href;
+  document.getElementById('shareX').href = `https://twitter.com/intent/tweet?text=${encodeURIComponent(titre)}&url=${encodeURIComponent(url)}`;
+  document.getElementById('shareFb').href = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
+  document.getElementById('shareMail').href = `mailto:?subject=${encodeURIComponent(titre)}&body=${encodeURIComponent(url)}`;
+}
+
 async function chargerArticle() {
   const params = new URLSearchParams(window.location.search);
   const slug = params.get('slug');
@@ -265,6 +272,7 @@ async function chargerArticle() {
 
     document.getElementById('filArticle').textContent = article.titre;
     document.getElementById('articleTitre').textContent = article.titre;
+    mettreAJourLiensPartage(article.titre);
     document.getElementById('articleSource').textContent = SOURCE_LABEL[article.source];
     document.getElementById('articleSource').className = 'source-tag ' + SOURCE_CLASSE[article.source];
     document.getElementById('articleDate').textContent = formaterDate(article.publie_le);

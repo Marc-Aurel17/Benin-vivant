@@ -26,6 +26,12 @@ services:
         sync: false          # ex: https://benin-vivant-backend.onrender.com
       - key: FRONTEND_URL
         sync: false          # ex: https://benin-vivant-frontend.onrender.com
+      - key: ALLOWED_ORIGINS
+        sync: false          # IMPORTANT : c'est CETTE variable (pas FRONTEND_URL) que le
+                              # code CORS lit réellement (includes/functions.php). Mets
+                              # ici l'URL exacte de ton frontend en ligne, ex :
+                              # https://benin-vivant-frontend-g5na.onrender.com
+                              # (plusieurs origines possibles séparées par une virgule)
       - key: AI_SERVICE_URL
         sync: false          # ex: https://benin-vivant-ai.onrender.com
       - key: AI_SERVICE_API_KEY

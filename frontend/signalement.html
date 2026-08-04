@@ -292,7 +292,7 @@ document.getElementById('btnEnvoyerSignalement').addEventListener('click', async
 
   try {
     const res = await BeninVivantAPI.envoyerSignalement({
-      typeProbleme: typeSelectionne,
+      type_probleme: typeSelectionne,
       titre,
       description,
       latitude: coords?.lat,

@@ -329,7 +329,11 @@ async function chargerEvenement() {
       marqueurEvt = L.circleMarker([evt.latitude, evt.longitude], {radius:8, color:'#8c3a2c', fillColor:'#8c3a2c', fillOpacity:.85, weight:1.5}).addTo(map).bindPopup(evt.lieu_nom);
     }
   } catch (err) {
-    console.warn('API indisponible ou événement introuvable, la fiche de démonstration reste affichée :', err.message);
+    console.warn('API indisponible ou événement introuvable :', err.message);
+    const banniere = document.createElement('div');
+    banniere.style.cssText = 'background:rgba(140,58,42,.18); border:1px solid var(--rouge-vodun); color:#e08a75; padding:1rem 1.3rem; border-radius:6px; margin-bottom:1.5rem; font-size:.9rem;';
+    banniere.textContent = '⚠ Impossible de charger cet événement (' + err.message + '). La fiche affichée ci-dessous est un exemple de démonstration, pas l\'événement demandé.';
+    document.getElementById('evtTitre')?.closest('.wrap')?.prepend(banniere);
   }
 }
 chargerEvenement();

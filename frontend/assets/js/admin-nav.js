@@ -67,12 +67,47 @@
     return path.substring(path.lastIndexOf('/') + 1) || 'admin-dashboard.html';
   }
 
+  function injectMobileToggle() {
+    if (document.getElementById('bv-admin-mobile-styles')) return;
+    const style = document.createElement('style');
+    style.id = 'bv-admin-mobile-styles';
+    style.textContent = `
+      .bv-admin-burger{
+        display:none; position:fixed; top:14px; left:14px; z-index:200;
+        background:var(--panneau); border:1px solid var(--bordure); color:var(--parchemin);
+        width:42px; height:42px; border-radius:6px; font-size:1.2rem; cursor:pointer;
+      }
+      @media (max-width:1000px){
+        .bv-admin-burger{display:block;}
+        .admin-sidebar.bv-open{
+          display:block !important; position:fixed; top:0; left:0; bottom:0; width:82%;
+          max-width:320px; overflow-y:auto; z-index:190; box-shadow:8px 0 30px rgba(0,0,0,.5);
+        }
+        .admin-main{padding-top:4.5rem;}
+      }
+    `;
+    document.head.appendChild(style);
+
+    const burger = document.createElement('button');
+    burger.className = 'bv-admin-burger';
+    burger.type = 'button';
+    burger.setAttribute('aria-label', 'Ouvrir le menu admin');
+    burger.textContent = '☰';
+    document.body.appendChild(burger);
+
+    burger.addEventListener('click', () => {
+      const sidebar = document.getElementById('bv-admin-sidebar');
+      sidebar.classList.toggle('bv-open');
+    });
+  }
+
   function render() {
     const host = document.getElementById('bv-admin-sidebar');
     if (!host) return;
 
     const current = currentFile();
     const isDashboard = current === 'admin-dashboard.html';
+    injectMobileToggle();
 
     // Le premier groupe ("Vue d'ensemble") est géré à part plus bas car son
     // lien "Recherche globale" a un comportement spécial selon la page.

@@ -438,6 +438,10 @@ async function chargerDonneesTableauDeBord(user) {
     }
   } catch (err) {
     console.warn('Erreur chargement tableau de bord :', err.message);
+    const messageErreur = `<p style="color:#e08a75; font-size:.85rem;">⚠ Impossible de charger (${err.message}).</p>`;
+    document.getElementById('dash-badges').innerHTML = messageErreur;
+    document.getElementById('dash-contributions').innerHTML = messageErreur;
+    document.getElementById('dash-signalements').innerHTML = messageErreur;
   }
 }
 

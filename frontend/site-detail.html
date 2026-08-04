@@ -299,7 +299,11 @@ async function chargerSite() {
     map.removeLayer(marqueurSite);
     marqueurSite = L.circleMarker([site.latitude, site.longitude], {radius:8, color:'#c99a2e', fillColor:'#c99a2e', fillOpacity:.85, weight:1.5}).addTo(map).bindPopup(site.nom);
   } catch (err) {
-    console.warn('API indisponible ou site introuvable, la fiche de démonstration reste affichée :', err.message);
+    console.warn('API indisponible ou site introuvable :', err.message);
+    const banniere = document.createElement('div');
+    banniere.style.cssText = 'background:rgba(140,58,42,.18); border:1px solid var(--rouge-vodun); color:#e08a75; padding:1rem 1.3rem; border-radius:6px; margin-bottom:1.5rem; font-size:.9rem;';
+    banniere.textContent = '⚠ Impossible de charger ce site (' + err.message + '). La fiche affichée ci-dessous est un exemple de démonstration, pas le site demandé.';
+    document.getElementById('siteTitre')?.closest('.wrap')?.prepend(banniere);
   }
 }
 chargerSite();
