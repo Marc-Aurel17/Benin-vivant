@@ -458,6 +458,15 @@ const BeninVivantAPI = (() => {
     async publierEthnie(id) {
       return request('/ethnies/publish.php', { method: 'PATCH', body: JSON.stringify({ id }) });
     },
+    async creerSite(payload) {
+      return request('/sites/create.php', { method: 'POST', body: JSON.stringify(payload) });
+    },
+    async creerEthnie(payload) {
+      return request('/ethnies/create.php', { method: 'POST', body: JSON.stringify(payload) });
+    },
+    async creerEvenementPublic(payload) {
+      return request('/evenements/create.php', { method: 'POST', body: JSON.stringify(payload) });
+    },
     async adminContributionsList(statut = 'en_attente') {
       const data = await request(`/admin/contributions-list.php?statut=${encodeURIComponent(statut)}`);
       return data.data;

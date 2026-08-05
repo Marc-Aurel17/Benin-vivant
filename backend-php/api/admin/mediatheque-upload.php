@@ -15,7 +15,7 @@ checkRateLimit('upload_media', 20, 60);
 
 $titre = cleanString($_POST['titre'] ?? '', 200);
 $categorie = cleanString($_POST['categorie'] ?? 'sites', 100);
-$categoriesAutorisees = ['sites', 'ethnies', 'evenements'];
+$categoriesAutorisees = ['sites', 'ethnies', 'evenements', 'actualites', 'partenaires', 'histoire'];
 
 if ($titre === '' || !in_array($categorie, $categoriesAutorisees, true)) {
     jsonError('Titre et catégorie valide requis.', 422);

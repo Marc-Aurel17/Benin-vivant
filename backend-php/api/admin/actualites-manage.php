@@ -23,6 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $contenu = cleanString($body['contenu'] ?? '', 10000);
     $source = $body['source'] ?? 'interne';
     $publier = !empty($body['publier']);
+    $imageCouverture = cleanString($body['image_couverture'] ?? '', 255);
 
     if ($titre === '' || $contenu === '') {
         jsonError('Titre et contenu requis.', 422);
@@ -34,10 +35,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9]+/', '-', $titre), '-')) . '-' . uniqid();
 
     $stmt = $pdo->prepare(
-        'INSERT INTO actualites (titre, slug, resume, contenu, source, auteur_id, publie_le, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, NOW())'
+        'INSERT INTO actualites (titre, slug, resume, contenu, source, image_couverture, auteur_id, publie_le, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())'
     );
-    $stmt->execute([$titre, $slug, $resume, $contenu, $source, $admin['id'], $publier ? date('Y-m-d H:i:s') : null]);
+    $stmt->execute([$titre, $slug, $resume, $contenu, $source, $imageCouverture ?: null, $admin['id'], $publier ? date('Y-m-d H:i:s') : null]);
 
     logSecurityEvent('actualite_creee', $admin['id'], ['titre' => $titre]);
     jsonResponse(['message' => 'Actualité créée.', 'id' => (int) $pdo->lastInsertId()], 201);

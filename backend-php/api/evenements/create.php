@@ -34,6 +34,9 @@ $lat = isset($body['latitude']) ? validateFloat($body['latitude'], -90, 90) : nu
 $lng = isset($body['longitude']) ? validateFloat($body['longitude'], -180, 180) : null;
 $groupeEthniqueId = isset($body['groupe_ethnique_id']) ? (int) $body['groupe_ethnique_id'] : null;
 $siteHistoriqueId = isset($body['site_historique_id']) ? (int) $body['site_historique_id'] : null;
+$imageCouverture = cleanString($body['image_couverture'] ?? '', 255);
+$entreeTarif = cleanString($body['entree_tarif'] ?? '', 100);
+$organisateur = cleanString($body['organisateur'] ?? '', 200);
 
 $errors = [];
 if ($titre === '') $errors[] = 'Le titre est requis.';
@@ -51,23 +54,32 @@ if ($errors) {
 
 $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9]+/', '-', $titre), '-')) . '-' . uniqid();
 
+// Publication immédiate si un admin/super_admin crée l'événement ; une
+// proposition venant d'un simple compte reste en attente de validation.
+$estAdmin = in_array($user['role'] ?? '', ['admin', 'super_admin'], true);
+
 $pdo = getPDO();
 $stmt = $pdo->prepare(
     'INSERT INTO evenements
      (slug, titre, description, type_evenement, groupe_ethnique_id, site_historique_id,
       lieu_nom, latitude, longitude, ville, departement,
       date_debut, date_fin, heure_debut, heure_fin, est_recurrent, frequence_recurrence,
+      entree_tarif, organisateur, image_couverture,
       statut, is_published, created_by, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, "a_venir", 0, ?, NOW(), NOW())'
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, "a_venir", ?, ?, NOW(), NOW())'
 );
 $stmt->execute([
     $slug, $titre, $description, $type, $groupeEthniqueId ?: null, $siteHistoriqueId ?: null,
     $lieuNom, $lat, $lng, $ville, $departement,
     $dateDebut, $dateFin ?: null, $heureDebut ?: null, $heureFin ?: null, $estRecurrent, $frequence,
-    $user['id'],
+    $entreeTarif ?: null, $organisateur ?: null, $imageCouverture ?: null,
+    $estAdmin ? 1 : 0, $user['id'],
 ]);
 
 $newId = (int) $pdo->lastInsertId();
-logSecurityEvent('evenement_soumis', $user['id'], ['evenement_id' => $newId]);
+logSecurityEvent('evenement_soumis', $user['id'], ['evenement_id' => $newId, 'publie_direct' => $estAdmin]);
 
-jsonResponse(['message' => 'Événement soumis, en attente de validation par un modérateur.', 'id' => $newId], 201);
+jsonResponse([
+    'message' => $estAdmin ? 'Événement créé et publié.' : 'Événement soumis, en attente de validation par un modérateur.',
+    'id' => $newId,
+], 201);

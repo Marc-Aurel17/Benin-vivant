@@ -24,6 +24,7 @@ $departement = cleanString($body['departement'] ?? '', 100);
 $lat = validateFloat($body['latitude'] ?? null, -90, 90);
 $lng = validateFloat($body['longitude'] ?? null, -180, 180);
 $duree = isset($body['duree_visite_recommandee_min']) ? (int) $body['duree_visite_recommandee_min'] : null;
+$imageUrl = cleanString($body['image_url'] ?? '', 255); // optionnel — voir table medias (polymorphe)
 
 $errors = [];
 if ($nom === '') $errors[] = 'Le nom du site est requis.';
@@ -37,17 +38,30 @@ if ($errors) {
 
 $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9]+/', '-', $nom), '-')) . '-' . uniqid();
 
+// Publication immédiate si un admin/super_admin crée la fiche ; une
+// contribution venant d'un simple compte reste en attente de validation.
+$estAdmin = in_array($user['role'] ?? '', ['admin', 'super_admin'], true);
+
 $pdo = getPDO();
 $stmt = $pdo->prepare(
     'INSERT INTO sites_historiques
      (slug, nom, description, histoire, latitude, longitude, ville, departement,
       duree_visite_recommandee_min, is_published, created_by, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, NOW(), NOW())'
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())'
 );
-// is_published toujours à 0 : validation obligatoire par un admin/modérateur avant publication
-$stmt->execute([$slug, $nom, $description, $histoire, $lat, $lng, $ville, $departement, $duree, $user['id']]);
+$stmt->execute([$slug, $nom, $description, $histoire, $lat, $lng, $ville, $departement, $duree, $estAdmin ? 1 : 0, $user['id']]);
 
 $newId = (int) $pdo->lastInsertId();
-logSecurityEvent('site_cree', $user['id'], ['site_id' => $newId]);
 
-jsonResponse(['message' => 'Site soumis, en attente de validation par un modérateur.', 'id' => $newId], 201);
+if ($imageUrl !== '') {
+    $pdo->prepare(
+        "INSERT INTO medias (mediable_type, mediable_id, type, url, created_at) VALUES ('site_historique', ?, 'image', ?, NOW())"
+    )->execute([$newId, $imageUrl]);
+}
+
+logSecurityEvent('site_cree', $user['id'], ['site_id' => $newId, 'publie_direct' => $estAdmin]);
+
+jsonResponse([
+    'message' => $estAdmin ? 'Site créé et publié.' : 'Site soumis, en attente de validation par un modérateur.',
+    'id' => $newId,
+], 201);

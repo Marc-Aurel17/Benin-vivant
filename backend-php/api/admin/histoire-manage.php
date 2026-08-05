@@ -24,10 +24,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $nom = cleanString($body['nom'] ?? '', 150);
         $periode = cleanString($body['periode'] ?? '', 100);
         $bio = cleanString($body['biographie'] ?? '', 3000);
+        $portraitUrl = cleanString($body['portrait_url'] ?? '', 255);
         if ($nom === '') jsonError('Nom requis.', 422);
 
-        $pdo->prepare('INSERT INTO figures_historiques (nom, periode, biographie, created_at) VALUES (?, ?, ?, NOW())')
-            ->execute([$nom, $periode, $bio]);
+        $pdo->prepare('INSERT INTO figures_historiques (nom, periode, biographie, portrait_url, created_at) VALUES (?, ?, ?, ?, NOW())')
+            ->execute([$nom, $periode, $bio, $portraitUrl ?: null]);
         jsonResponse(['message' => 'Figure historique ajoutée.'], 201);
     }
 
@@ -37,6 +38,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $dateFin = isset($body['date_fin']) && $body['date_fin'] !== '' ? (int) $body['date_fin'] : null;
     $description = cleanString($body['description'] ?? '', 2000);
     $ordre = isset($body['ordre_frise']) ? (int) $body['ordre_frise'] : 0;
+    $imageAvant = cleanString($body['image_avant'] ?? '', 255);
+    $imageApres = cleanString($body['image_apres'] ?? '', 255);
 
     $categoriesAutorisees = ['royaume_precolonial', 'colonisation', 'esclavage', 'independance', 'moderne'];
     if ($titre === '' || !in_array($categorie, $categoriesAutorisees, true)) {
@@ -44,9 +47,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     $pdo->prepare(
-        'INSERT INTO periode_evolution_benin (titre, categorie, date_debut, date_fin, description, ordre_frise, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, NOW())'
-    )->execute([$titre, $categorie, $dateDebut, $dateFin, $description, $ordre]);
+        'INSERT INTO periode_evolution_benin (titre, categorie, date_debut, date_fin, description, image_avant, image_apres, ordre_frise, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())'
+    )->execute([$titre, $categorie, $dateDebut, $dateFin, $description, $imageAvant ?: null, $imageApres ?: null, $ordre]);
     logSecurityEvent('periode_creee', $admin['id'], ['titre' => $titre]);
     jsonResponse(['message' => 'Période ajoutée.'], 201);
 }

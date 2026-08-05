@@ -303,7 +303,52 @@ table.admin-table tr:last-child td{border-bottom:none;}
   <main class="admin-main">
     <div class="admin-topbar">
       <h1>Gestion du contenu</h1>
-      <div class="admin-user"></div>
+      <div style="display:flex; gap:.6rem; align-items:center;">
+        <button class="btn btn-primary" style="font-size:.85rem;" id="btnToggleFormSite" onclick="document.getElementById('formCreationSite').classList.toggle('hidden')">+ Nouveau site</button>
+        <button class="btn btn-primary" style="font-size:.85rem;" id="btnToggleFormEthnie" onclick="document.getElementById('formCreationEthnie').classList.toggle('hidden')">+ Nouvelle ethnie</button>
+        <div class="admin-user"></div>
+      </div>
+    </div>
+
+    <div class="panel hidden" id="formCreationSite">
+      <div class="panel-body" style="padding:1.5rem;">
+        <h3 style="margin-bottom:1rem; font-family:var(--serif); font-weight:500;">Nouveau site historique</h3>
+        <div class="form-row-2">
+          <div class="form-group"><label>Nom du site</label><input type="text" id="sNom"></div>
+          <div class="form-group"><label>Ville</label><input type="text" id="sVille"></div>
+        </div>
+        <div class="form-row-2">
+          <div class="form-group"><label>Département</label><input type="text" id="sDepartement"></div>
+          <div class="form-group"><label>Durée de visite recommandée (min)</label><input type="number" id="sDuree"></div>
+        </div>
+        <div class="form-row-2">
+          <div class="form-group"><label>Latitude</label><input type="text" id="sLat" placeholder="ex: 7.1833"></div>
+          <div class="form-group"><label>Longitude</label><input type="text" id="sLng" placeholder="ex: 1.9833"></div>
+        </div>
+        <div class="form-group"><label>Description</label><textarea id="sDescription"></textarea></div>
+        <div class="form-group"><label>Histoire</label><textarea id="sHistoire"></textarea></div>
+        <div class="form-group"><label>Photo (optionnel)</label><input type="file" id="sFichier" accept="image/*"></div>
+        <div id="sMsg" style="display:none; margin-bottom:1rem; padding:.8rem 1rem; border-radius:6px; font-size:.85rem;"></div>
+        <button class="btn btn-primary" id="btnCreerSite">Créer le site</button>
+      </div>
+    </div>
+
+    <div class="panel hidden" id="formCreationEthnie">
+      <div class="panel-body" style="padding:1.5rem;">
+        <h3 style="margin-bottom:1rem; font-family:var(--serif); font-weight:500;">Nouvelle ethnie</h3>
+        <div class="form-row-2">
+          <div class="form-group"><label>Nom</label><input type="text" id="eNom"></div>
+          <div class="form-group"><label>Région principale</label><input type="text" id="eRegion"></div>
+        </div>
+        <div class="form-row-2">
+          <div class="form-group"><label>Langue principale</label><input type="text" id="eLangue"></div>
+          <div class="form-group"><label>Population estimée</label><input type="text" id="ePopulation"></div>
+        </div>
+        <div class="form-group"><label>Histoire</label><textarea id="eHistoire"></textarea></div>
+        <div class="form-group"><label>Photo de couverture (optionnel)</label><input type="file" id="eFichier" accept="image/*"></div>
+        <div id="eMsg" style="display:none; margin-bottom:1rem; padding:.8rem 1rem; border-radius:6px; font-size:.85rem;"></div>
+        <button class="btn btn-primary" id="btnCreerEthnie">Créer l'ethnie</button>
+      </div>
     </div>
 
     <div class="tab-bar">
@@ -355,6 +400,83 @@ async function chargerContenu() {
 
 async function publierSite(id) { await BeninVivantAPI.publierSite(id); chargerContenu(); }
 async function publierEthnie(id) { await BeninVivantAPI.publierEthnie(id); chargerContenu(); }
+
+function afficherMsg(id, texte, ok) {
+  const box = document.getElementById(id);
+  box.style.display = 'block';
+  box.style.background = ok ? 'rgba(63,102,83,.15)' : 'rgba(140,58,42,.15)';
+  box.style.color = ok ? '#7fd9ab' : '#e08a75';
+  box.textContent = texte;
+}
+
+document.getElementById('btnCreerSite').addEventListener('click', async () => {
+  const btn = document.getElementById('btnCreerSite');
+  const nom = document.getElementById('sNom').value.trim();
+  const lat = document.getElementById('sLat').value.trim();
+  const lng = document.getElementById('sLng').value.trim();
+  if (!nom || !lat || !lng) { afficherMsg('sMsg', 'Nom, latitude et longitude sont requis.', false); return; }
+
+  btn.disabled = true; btn.textContent = 'Création...';
+  try {
+    let imageUrl = '';
+    const fichier = document.getElementById('sFichier').files[0];
+    if (fichier) {
+      const up = await BeninVivantAPI.uploaderMedia(nom, 'sites', fichier);
+      imageUrl = up.url;
+    }
+    await BeninVivantAPI.creerSite({
+      nom,
+      description: document.getElementById('sDescription').value.trim(),
+      histoire: document.getElementById('sHistoire').value.trim(),
+      ville: document.getElementById('sVille').value.trim(),
+      departement: document.getElementById('sDepartement').value.trim(),
+      duree_visite_recommandee_min: document.getElementById('sDuree').value || null,
+      latitude: lat,
+      longitude: lng,
+      image_url: imageUrl,
+    });
+    afficherMsg('sMsg', '✓ Site créé et publié.', true);
+    ['sNom','sVille','sDepartement','sDuree','sLat','sLng','sDescription','sHistoire'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('sFichier').value = '';
+    chargerContenu();
+  } catch (err) {
+    afficherMsg('sMsg', '⚠ ' + err.message, false);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Créer le site';
+  }
+});
+
+document.getElementById('btnCreerEthnie').addEventListener('click', async () => {
+  const btn = document.getElementById('btnCreerEthnie');
+  const nom = document.getElementById('eNom').value.trim();
+  if (!nom) { afficherMsg('eMsg', "Le nom de l'ethnie est requis.", false); return; }
+
+  btn.disabled = true; btn.textContent = 'Création...';
+  try {
+    let imageUrl = '';
+    const fichier = document.getElementById('eFichier').files[0];
+    if (fichier) {
+      const up = await BeninVivantAPI.uploaderMedia(nom, 'ethnies', fichier);
+      imageUrl = up.url;
+    }
+    await BeninVivantAPI.creerEthnie({
+      nom,
+      region_principale: document.getElementById('eRegion').value.trim(),
+      langue_principale: document.getElementById('eLangue').value.trim(),
+      population_estimee: document.getElementById('ePopulation').value.trim(),
+      histoire: document.getElementById('eHistoire').value.trim(),
+      image_couverture: imageUrl,
+    });
+    afficherMsg('eMsg', "✓ Ethnie créée et publiée.", true);
+    ['eNom','eRegion','eLangue','ePopulation','eHistoire'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('eFichier').value = '';
+    chargerContenu();
+  } catch (err) {
+    afficherMsg('eMsg', '⚠ ' + err.message, false);
+  } finally {
+    btn.disabled = false; btn.textContent = "Créer l'ethnie";
+  }
+});
 
 document.querySelectorAll('.tab').forEach(tab => {
   tab.addEventListener('click', () => {

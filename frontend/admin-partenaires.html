@@ -292,12 +292,13 @@ table.admin-table tr:last-child td{border-bottom:none;}
 
     <div class="panel">
       <div class="panel-body" style="padding:1.5rem;">
-        <div class="upload-form" style="grid-template-columns:2fr 1fr 1fr auto;">
+        <div class="upload-form" style="grid-template-columns:2fr 1fr 1fr auto; margin-bottom:1rem;">
           <div class="form-group" style="margin:0;"><label>Nom du partenaire</label><input type="text" id="pNom"></div>
           <div class="form-group" style="margin:0;"><label>Site web (optionnel)</label><input type="text" id="pSite" placeholder="https://..."></div>
           <div class="form-group" style="margin:0;"><label>Ordre d'affichage</label><input type="number" id="pOrdre" value="0"></div>
           <button class="btn btn-primary" id="btnAjouter">Ajouter</button>
         </div>
+        <div class="form-group" style="max-width:320px;"><label>Logo (optionnel)</label><input type="file" id="pFichier" accept="image/*"></div>
       </div>
     </div>
 
@@ -330,8 +331,15 @@ document.getElementById('btnAjouter').addEventListener('click', async () => {
   const siteWeb = document.getElementById('pSite').value.trim();
   const ordre = document.getElementById('pOrdre').value;
   if (!nom) { alert('Nom requis.'); return; }
-  await BeninVivantAPI.adminPartenairesCreer({ nom, site_web: siteWeb, ordre });
+  let logoUrl = '';
+  const fichier = document.getElementById('pFichier').files[0];
+  if (fichier) {
+    const up = await BeninVivantAPI.uploaderMedia(nom, 'partenaires', fichier);
+    logoUrl = up.url;
+  }
+  await BeninVivantAPI.adminPartenairesCreer({ nom, site_web: siteWeb, ordre, logo_url: logoUrl });
   document.getElementById('pNom').value = ''; document.getElementById('pSite').value = '';
+  document.getElementById('pFichier').value = '';
   charger();
 });
 

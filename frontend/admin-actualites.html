@@ -303,6 +303,7 @@ table.admin-table tr:last-child td{border-bottom:none;}
         </div>
         <div class="form-group"><label>Résumé</label><input type="text" id="aResume"></div>
         <div class="form-group"><label>Contenu</label><textarea id="aContenu" style="min-height:150px;"></textarea></div>
+        <div class="form-group"><label>Image de couverture (optionnel)</label><input type="file" id="aFichier" accept="image/*"></div>
         <label style="display:flex; align-items:center; gap:.5rem; font-size:.85rem; color:var(--parchemin-att); margin-bottom:1rem;"><input type="checkbox" id="aPublier" checked> Publier immédiatement</label>
         <button class="btn btn-primary" id="btnCreerActu">Créer l'article</button>
       </div>
@@ -345,8 +346,15 @@ document.getElementById('btnCreerActu').addEventListener('click', async () => {
   const source = document.getElementById('aSource').value;
   const publier = document.getElementById('aPublier').checked;
   if (!titre || !contenu) { alert('Titre et contenu requis.'); return; }
-  await BeninVivantAPI.adminActualitesCreer({ titre, resume, contenu, source, publier });
+  let imageUrl = '';
+  const fichier = document.getElementById('aFichier').files[0];
+  if (fichier) {
+    const up = await BeninVivantAPI.uploaderMedia(titre, 'actualites', fichier);
+    imageUrl = up.url;
+  }
+  await BeninVivantAPI.adminActualitesCreer({ titre, resume, contenu, source, publier, image_couverture: imageUrl });
   document.getElementById('formCreation').classList.add('hidden');
+  document.getElementById('aFichier').value = '';
   charger();
 });
 

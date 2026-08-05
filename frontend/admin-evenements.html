@@ -301,7 +301,48 @@ table.admin-table tr:last-child td{border-bottom:none;}
   <main class="admin-main">
     <div class="admin-topbar">
       <h1>Gestion des événements</h1>
-      <div class="admin-user"></div>
+      <div style="display:flex; gap:.6rem; align-items:center;">
+        <button class="btn btn-primary" style="font-size:.85rem;" onclick="document.getElementById('formCreationEvt').classList.toggle('hidden')">+ Nouvel événement</button>
+        <div class="admin-user"></div>
+      </div>
+    </div>
+
+    <div class="panel hidden" id="formCreationEvt">
+      <div class="panel-body" style="padding:1.5rem;">
+        <h3 style="margin-bottom:1rem; font-family:var(--serif); font-weight:500;">Nouvel événement</h3>
+        <div class="form-row-2">
+          <div class="form-group"><label>Titre</label><input type="text" id="evTitre"></div>
+          <div class="form-group"><label>Type</label>
+            <select id="evType" style="width:100%; background:var(--nuit-2); border:1px solid var(--bordure); border-radius:4px; padding:.75rem .9rem; color:var(--parchemin);">
+              <option value="fete_traditionnelle">Fête traditionnelle</option>
+              <option value="ceremonie_religieuse">Cérémonie religieuse</option>
+              <option value="festival_culturel">Festival culturel</option>
+              <option value="marche_special">Marché spécial</option>
+              <option value="commemoration">Commémoration</option>
+              <option value="autre">Autre</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row-2">
+          <div class="form-group"><label>Lieu</label><input type="text" id="evLieu"></div>
+          <div class="form-group"><label>Ville / Département</label><input type="text" id="evVille"></div>
+        </div>
+        <div class="form-row-2">
+          <div class="form-group"><label>Date de début</label><input type="date" id="evDateDebut"></div>
+          <div class="form-group"><label>Date de fin (optionnel)</label><input type="date" id="evDateFin"></div>
+        </div>
+        <div class="form-row-2">
+          <div class="form-group"><label>Tarif d'entrée</label><input type="text" id="evTarif" placeholder="ex: Gratuit"></div>
+          <div class="form-group"><label>Organisateur</label><input type="text" id="evOrganisateur"></div>
+        </div>
+        <div class="form-group">
+          <label><input type="checkbox" id="evRecurrent"> Événement annuel récurrent</label>
+        </div>
+        <div class="form-group"><label>Description</label><textarea id="evDescription"></textarea></div>
+        <div class="form-group"><label>Photo de couverture (optionnel)</label><input type="file" id="evFichier" accept="image/*"></div>
+        <div id="evMsg" style="display:none; margin-bottom:1rem; padding:.8rem 1rem; border-radius:6px; font-size:.85rem;"></div>
+        <button class="btn btn-primary" id="btnCreerEvenement">Créer l'événement</button>
+      </div>
     </div>
 
     <div class="panel">
@@ -366,6 +407,60 @@ async function traiterEvt(id, action) {
   await BeninVivantAPI.adminEvenementsProcess(id, action);
   chargerEvenements();
 }
+
+document.getElementById('btnCreerEvenement').addEventListener('click', async () => {
+  const btn = document.getElementById('btnCreerEvenement');
+  const msg = document.getElementById('evMsg');
+  const titre = document.getElementById('evTitre').value.trim();
+  const lieu = document.getElementById('evLieu').value.trim();
+  const dateDebut = document.getElementById('evDateDebut').value;
+  const description = document.getElementById('evDescription').value.trim();
+
+  function afficher(texte, ok) {
+    msg.style.display = 'block';
+    msg.style.background = ok ? 'rgba(63,102,83,.15)' : 'rgba(140,58,42,.15)';
+    msg.style.color = ok ? '#7fd9ab' : '#e08a75';
+    msg.textContent = texte;
+  }
+
+  if (!titre || !lieu || !dateDebut || !description) {
+    afficher('Titre, lieu, date de début et description sont requis.', false);
+    return;
+  }
+
+  btn.disabled = true; btn.textContent = 'Création...';
+  try {
+    let imageUrl = '';
+    const fichier = document.getElementById('evFichier').files[0];
+    if (fichier) {
+      const up = await BeninVivantAPI.uploaderMedia(titre, 'evenements', fichier);
+      imageUrl = up.url;
+    }
+    await BeninVivantAPI.creerEvenementPublic({
+      titre,
+      description,
+      type_evenement: document.getElementById('evType').value,
+      lieu_nom: lieu,
+      ville: document.getElementById('evVille').value.trim(),
+      date_debut: dateDebut,
+      date_fin: document.getElementById('evDateFin').value || null,
+      est_recurrent: document.getElementById('evRecurrent').checked,
+      frequence_recurrence: document.getElementById('evRecurrent').checked ? 'annuel' : 'ponctuel',
+      entree_tarif: document.getElementById('evTarif').value.trim(),
+      organisateur: document.getElementById('evOrganisateur').value.trim(),
+      image_couverture: imageUrl,
+    });
+    afficher('✓ Événement créé et publié.', true);
+    ['evTitre','evLieu','evVille','evDateDebut','evDateFin','evTarif','evOrganisateur','evDescription'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('evFichier').value = '';
+    document.getElementById('evRecurrent').checked = false;
+    chargerEvenements();
+  } catch (err) {
+    afficher('⚠ ' + err.message, false);
+  } finally {
+    btn.disabled = false; btn.textContent = "Créer l'événement";
+  }
+});
 
 gardeAdmin().then(user => { if (user) chargerEvenements(); });
 </script>

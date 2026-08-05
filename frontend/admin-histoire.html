@@ -316,6 +316,10 @@ table.admin-table tr:last-child td{border-bottom:none;}
             <div class="form-group"><label>Année fin (optionnel)</label><input type="number" id="perFin"></div>
           </div>
           <div class="form-group"><label>Description</label><textarea id="perDescription"></textarea></div>
+          <div class="form-row-2">
+            <div class="form-group"><label>Image "avant" (optionnel)</label><input type="file" id="perFichierAvant" accept="image/*"></div>
+            <div class="form-group"><label>Image "après" (optionnel)</label><input type="file" id="perFichierApres" accept="image/*"></div>
+          </div>
           <button class="btn btn-primary" id="btnCreerPeriode">Ajouter la période</button>
         </div>
       </div>
@@ -335,6 +339,7 @@ table.admin-table tr:last-child td{border-bottom:none;}
             <div class="form-group"><label>Période</label><input type="text" id="figPeriode" placeholder="ex: 1889 – 1894"></div>
           </div>
           <div class="form-group"><label>Biographie</label><textarea id="figBio"></textarea></div>
+          <div class="form-group"><label>Portrait (optionnel)</label><input type="file" id="figFichier" accept="image/*"></div>
           <button class="btn btn-primary" id="btnCreerFigure">Ajouter la figure</button>
         </div>
       </div>
@@ -381,7 +386,13 @@ document.getElementById('btnCreerPeriode').addEventListener('click', async () =>
   const dateFin = document.getElementById('perFin').value;
   const description = document.getElementById('perDescription').value.trim();
   if (!titre) { alert('Titre requis.'); return; }
-  await BeninVivantAPI.adminHistoireCreer({ type: 'periode', titre, categorie, date_debut: dateDebut, date_fin: dateFin, description });
+  let imageAvant = '', imageApres = '';
+  const fAvant = document.getElementById('perFichierAvant').files[0];
+  const fApres = document.getElementById('perFichierApres').files[0];
+  if (fAvant) imageAvant = (await BeninVivantAPI.uploaderMedia(titre + ' (avant)', 'histoire', fAvant)).url;
+  if (fApres) imageApres = (await BeninVivantAPI.uploaderMedia(titre + ' (après)', 'histoire', fApres)).url;
+  await BeninVivantAPI.adminHistoireCreer({ type: 'periode', titre, categorie, date_debut: dateDebut, date_fin: dateFin, description, image_avant: imageAvant, image_apres: imageApres });
+  document.getElementById('perFichierAvant').value = ''; document.getElementById('perFichierApres').value = '';
   charger();
 });
 
@@ -390,7 +401,11 @@ document.getElementById('btnCreerFigure').addEventListener('click', async () => 
   const periode = document.getElementById('figPeriode').value.trim();
   const biographie = document.getElementById('figBio').value.trim();
   if (!nom) { alert('Nom requis.'); return; }
-  await BeninVivantAPI.adminHistoireCreer({ type: 'figure', nom, periode, biographie });
+  let portraitUrl = '';
+  const fichier = document.getElementById('figFichier').files[0];
+  if (fichier) portraitUrl = (await BeninVivantAPI.uploaderMedia(nom, 'histoire', fichier)).url;
+  await BeninVivantAPI.adminHistoireCreer({ type: 'figure', nom, periode, biographie, portrait_url: portraitUrl });
+  document.getElementById('figFichier').value = '';
   charger();
 });
 

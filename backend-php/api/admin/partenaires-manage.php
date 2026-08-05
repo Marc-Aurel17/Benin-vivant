@@ -20,11 +20,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $nom = cleanString($body['nom'] ?? '', 150);
     $siteWeb = cleanString($body['site_web'] ?? '', 255);
     $ordre = isset($body['ordre']) ? (int) $body['ordre'] : 0;
+    $logoUrl = cleanString($body['logo_url'] ?? '', 255);
 
     if ($nom === '') jsonError('Nom requis.', 422);
 
-    $stmt = $pdo->prepare('INSERT INTO partenaires (nom, site_web, ordre, created_at) VALUES (?, ?, ?, NOW())');
-    $stmt->execute([$nom, $siteWeb ?: null, $ordre]);
+    $stmt = $pdo->prepare('INSERT INTO partenaires (nom, logo_url, site_web, ordre, created_at) VALUES (?, ?, ?, ?, NOW())');
+    $stmt->execute([$nom, $logoUrl ?: null, $siteWeb ?: null, $ordre]);
     logSecurityEvent('partenaire_cree', $admin['id'], ['nom' => $nom]);
     jsonResponse(['message' => 'Partenaire ajouté.'], 201);
 }
