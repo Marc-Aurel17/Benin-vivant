@@ -107,7 +107,7 @@
           </div>
           <div class="bv-nav-mobile-only" style="display:none;">${mobileHtml}</div>
         </nav>
-        <a href="mon-espace.html" class="nav-cta">Mon espace</a>
+        <a href="mon-espace.html" class="nav-cta" id="bv-nav-espace">Mon espace</a>
         <span id="bv-theme-slot"></span>
         <button class="nav-burger" id="bv-nav-burger" type="button" aria-label="Ouvrir le menu" aria-expanded="false">☰</button>
       </div>
@@ -148,6 +148,27 @@
         moreToggle.setAttribute('aria-expanded', 'false');
       }
     });
+
+    adapterBoutonEspace();
+  }
+
+  // Un admin/super_admin n'a rien à faire sur "Mon espace" (réservé aux
+  // contributeurs) : on transforme le bouton en raccourci direct vers son
+  // Tableau de bord. Silencieux et sans effet pour un visiteur non connecté
+  // (whoami() échoue simplement en 401, on garde le lien par défaut).
+  async function adapterBoutonEspace() {
+    if (typeof BeninVivantAPI === 'undefined') return;
+    const bouton = document.getElementById('bv-nav-espace');
+    if (!bouton) return;
+    try {
+      const user = await BeninVivantAPI.whoami();
+      if (user && (user.role === 'admin' || user.role === 'super_admin')) {
+        bouton.href = 'admin-dashboard.html';
+        bouton.textContent = 'Tableau de bord';
+      }
+    } catch (err) {
+      // Non connecté ou erreur réseau : on garde "Mon espace" par défaut.
+    }
   }
 
   if (document.readyState === 'loading') {
