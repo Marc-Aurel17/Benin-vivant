@@ -352,6 +352,20 @@ const TYPE_LABEL = { tradition: 'Tradition', site: 'Site', information: 'Informa
 const PROBLEME_LABEL = { site_degrade: 'Site dégradé', monument_menace: 'Monument menacé', tradition_en_danger: 'Tradition en danger', erreur_contenu: 'Erreur de contenu' };
 
 async function chargerDashboard() {
+  try {
+    await chargerStatsEtTableaux();
+  } catch (err) {
+    console.error('Erreur chargement dashboard :', err);
+    document.getElementById('kpiGrid').innerHTML = `
+      <div style="grid-column:1/-1; background:rgba(140,58,44,.15); border:1px solid var(--rouge-vodun); border-radius:5px; padding:1rem 1.3rem; color:var(--parchemin);">
+        ⚠ Impossible de charger les statistiques (${err.message || 'erreur inconnue'})
+      </div>`;
+    document.getElementById('contribTbody').innerHTML = '<tr><td colspan="5" style="color:var(--rouge-vodun);">Erreur de chargement.</td></tr>';
+    document.getElementById('signalTbody').innerHTML = '<tr><td colspan="4" style="color:var(--rouge-vodun);">Erreur de chargement.</td></tr>';
+  }
+}
+
+async function chargerStatsEtTableaux() {
   const stats = await BeninVivantAPI.dashboardStats();
 
   document.getElementById('kpiGrid').innerHTML = `
