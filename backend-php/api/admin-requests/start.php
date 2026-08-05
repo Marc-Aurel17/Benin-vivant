@@ -43,7 +43,7 @@ $codeHash = password_hash($code, PASSWORD_BCRYPT); // le code est hashé, jamais
 $stmt = $pdo->prepare(
     'INSERT INTO demandes_inscription_admin
      (nom, prenom, email, telephone, code_verification_email, statut, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, "etape_email", NOW(), NOW())'
+     VALUES (?, ?, ?, ?, ?, \'etape_email\', NOW(), NOW())'
 );
 $stmt->execute([$nom, $prenom, $email, $telephone, $codeHash]);
 

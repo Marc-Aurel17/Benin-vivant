@@ -34,7 +34,7 @@ if ($errors) {
 $pdo = getPDO();
 $stmt = $pdo->prepare(
     'INSERT INTO propositions_projets (nom_porteur, email_contact, titre, description, type_projet, statut, created_at)
-     VALUES (?, ?, ?, ?, ?, "nouveau", NOW())'
+     VALUES (?, ?, ?, ?, ?, \'nouveau\', NOW())'
 );
 $stmt->execute([$nomPorteur, $emailContact, $titre, $description, $typeProjet]);
 

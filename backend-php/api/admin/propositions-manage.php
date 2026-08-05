@@ -10,7 +10,7 @@ $admin = requireRole('admin', 'super_admin');
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $pdo = getPDO();
-    $stmt = $pdo->query('SELECT * FROM propositions_projets ORDER BY FIELD(statut, "nouveau", "en_etude", "accepte", "rejete"), created_at DESC');
+    $stmt = $pdo->query('SELECT * FROM propositions_projets ORDER BY FIELD(statut, \'nouveau\', \'en_etude\', \'accepte\', \'rejete\'), created_at DESC');
     jsonResponse(['data' => $stmt->fetchAll()]);
 }
 
@@ -36,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'PATCH') {
             $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9]+/', '-', $p['titre']), '-')) . '-' . uniqid();
             $pdo->prepare(
                 'INSERT INTO projets_patrimoine (titre, slug, type_projet, description, porteur_projet, statut, created_at)
-                 VALUES (?, ?, ?, ?, ?, "en_cours", NOW())'
+                 VALUES (?, ?, ?, ?, ?, \'en_cours\', NOW())'
             )->execute([$p['titre'], $slug, $p['type_projet'], $p['description'], $p['nom_porteur']]);
         }
     }

@@ -15,7 +15,7 @@ requireRole('admin', 'super_admin');
 $pdo = getPDO();
 $stmt = $pdo->query(
     'SELECT id, type_probleme, titre, description, latitude, longitude, statut, created_at
-     FROM signalements ORDER BY FIELD(statut, "nouveau", "en_cours", "resolu", "rejete"), created_at DESC'
+     FROM signalements ORDER BY FIELD(statut, \'nouveau\', \'en_cours\', \'resolu\', \'rejete\'), created_at DESC'
 );
 
 jsonResponse(['data' => $stmt->fetchAll()]);

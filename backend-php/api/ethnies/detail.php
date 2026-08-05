@@ -44,7 +44,7 @@ $tenues->execute([$id]);
 $objets = $pdo->prepare('SELECT nom, signification FROM objets_art WHERE groupe_ethnique_id = ?');
 $objets->execute([$id]);
 
-$medias = $pdo->prepare('SELECT type, url, legende FROM medias WHERE mediable_type = "groupe_ethnique" AND mediable_id = ? ORDER BY ordre');
+$medias = $pdo->prepare('SELECT type, url, legende FROM medias WHERE mediable_type = \'groupe_ethnique\' AND mediable_id = ? ORDER BY ordre');
 $medias->execute([$id]);
 
 jsonResponse(['data' => [

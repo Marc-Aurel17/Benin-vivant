@@ -22,7 +22,7 @@ if ($demandeId <= 0 || $code === '') {
 }
 
 $pdo = getPDO();
-$stmt = $pdo->prepare('SELECT * FROM demandes_inscription_admin WHERE id = ? AND statut = "etape_email"');
+$stmt = $pdo->prepare('SELECT * FROM demandes_inscription_admin WHERE id = ? AND statut = \'etape_email\'');
 $stmt->execute([$demandeId]);
 $demande = $stmt->fetch();
 
@@ -37,7 +37,7 @@ if (!password_verify($code, $demande['code_verification_email'])) {
 
 $update = $pdo->prepare(
     'UPDATE demandes_inscription_admin
-     SET email_verifie = 1, statut = "etape_identite", updated_at = NOW()
+     SET email_verifie = 1, statut = \'etape_identite\', updated_at = NOW()
      WHERE id = ?'
 );
 $update->execute([$demandeId]);

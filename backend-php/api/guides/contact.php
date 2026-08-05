@@ -39,7 +39,7 @@ if (!$stmtGuide->fetch()) {
 
 $stmt = $pdo->prepare(
     'INSERT INTO demandes_contact_guide (guide_id, visiteur_nom, visiteur_email, visiteur_telephone, message, statut, created_at)
-     VALUES (?, ?, ?, ?, ?, "nouveau", NOW())'
+     VALUES (?, ?, ?, ?, ?, \'nouveau\', NOW())'
 );
 $stmt->execute([$guideId, $nom, $email, $telephone ?: null, $message]);
 

@@ -74,7 +74,7 @@ try {
     // 3. Enregistrement en base, statut "en_attente" — le webhook confirmera le succès
     $insert = $pdo->prepare(
         'INSERT INTO dons (projet_id, user_id, donateur_nom, donateur_email, montant, devise, methode_paiement, reference_transaction, statut, created_at)
-         VALUES (?, ?, ?, ?, ?, "XOF", ?, ?, "en_attente", NOW())'
+         VALUES (?, ?, ?, ?, ?, \'XOF\', ?, ?, \'en_attente\', NOW())'
     );
     $insert->execute([
         $projetId,

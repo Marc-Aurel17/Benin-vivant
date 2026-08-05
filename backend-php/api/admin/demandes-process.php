@@ -47,14 +47,14 @@ try {
 
         $insertUser = $pdo->prepare(
             'INSERT INTO users (uuid, nom, prenom, email, telephone, password_hash, role, is_active, created_at, updated_at)
-             VALUES (?, ?, ?, ?, ?, ?, "admin", 1, NOW(), NOW())'
+             VALUES (?, ?, ?, ?, ?, ?, \'admin\', 1, NOW(), NOW())'
         );
         $insertUser->execute([$uuid, $demande['nom'], $demande['prenom'], $demande['email'], $demande['telephone'], $hash]);
 
         $token = bin2hex(random_bytes(32));
         $update = $pdo->prepare(
             'UPDATE demandes_inscription_admin
-             SET statut = "approuve", token_activation = ?, valide_par = ?, commentaire_admin = ?, updated_at = NOW()
+             SET statut = \'approuve\', token_activation = ?, valide_par = ?, commentaire_admin = ?, updated_at = NOW()
              WHERE id = ?'
         );
         $update->execute([$token, $superAdmin['id'], $commentaire, $demandeId]);
@@ -65,17 +65,17 @@ try {
 
     } elseif ($action === 'rejeter') {
         $update = $pdo->prepare(
-            'UPDATE demandes_inscription_admin SET statut = "rejete", valide_par = ?, commentaire_admin = ?, updated_at = NOW() WHERE id = ?'
+            'UPDATE demandes_inscription_admin SET statut = \'rejete\', valide_par = ?, commentaire_admin = ?, updated_at = NOW() WHERE id = ?'
         );
         $update->execute([$superAdmin['id'], $commentaire, $demandeId]);
     } elseif ($action === 'bloquer') {
         $update = $pdo->prepare(
-            'UPDATE demandes_inscription_admin SET statut = "bloque", valide_par = ?, commentaire_admin = ?, updated_at = NOW() WHERE id = ?'
+            'UPDATE demandes_inscription_admin SET statut = \'bloque\', valide_par = ?, commentaire_admin = ?, updated_at = NOW() WHERE id = ?'
         );
         $update->execute([$superAdmin['id'], $commentaire, $demandeId]);
     } else { // debloquer : remet la demande en attente de validation
         $update = $pdo->prepare(
-            'UPDATE demandes_inscription_admin SET statut = "en_attente_validation", valide_par = ?, commentaire_admin = ?, updated_at = NOW() WHERE id = ?'
+            'UPDATE demandes_inscription_admin SET statut = \'en_attente_validation\', valide_par = ?, commentaire_admin = ?, updated_at = NOW() WHERE id = ?'
         );
         $update->execute([$superAdmin['id'], $commentaire, $demandeId]);
     }

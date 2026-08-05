@@ -26,7 +26,7 @@ $pdo = getPDO();
 if ($action === 'publier') {
     $stmt = $pdo->prepare('UPDATE evenements SET is_published = 1, updated_at = NOW() WHERE id = ?');
 } elseif ($action === 'annuler') {
-    $stmt = $pdo->prepare('UPDATE evenements SET statut = "annule", updated_at = NOW() WHERE id = ?');
+    $stmt = $pdo->prepare('UPDATE evenements SET statut = \'annule\', updated_at = NOW() WHERE id = ?');
 } else {
     $stmt = $pdo->prepare('DELETE FROM evenements WHERE id = ?');
 }

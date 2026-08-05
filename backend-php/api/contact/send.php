@@ -29,7 +29,7 @@ if ($errors) {
 
 $pdo = getPDO();
 $stmt = $pdo->prepare(
-    'INSERT INTO contacts (nom, email, sujet, message, statut, created_at) VALUES (?, ?, ?, ?, "nouveau", NOW())'
+    'INSERT INTO contacts (nom, email, sujet, message, statut, created_at) VALUES (?, ?, ?, ?, \'nouveau\', NOW())'
 );
 $stmt->execute([$nom, $email, $sujet, $message]);
 

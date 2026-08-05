@@ -66,7 +66,7 @@ $stmt = $pdo->prepare(
       date_debut, date_fin, heure_debut, heure_fin, est_recurrent, frequence_recurrence,
       entree_tarif, organisateur, image_couverture,
       statut, is_published, created_by, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, "a_venir", ?, ?, NOW(), NOW())'
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, \'a_venir\', ?, ?, NOW(), NOW())'
 );
 $stmt->execute([
     $slug, $titre, $description, $type, $groupeEthniqueId ?: null, $siteHistoriqueId ?: null,

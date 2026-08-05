@@ -32,7 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $stmt = $pdo->prepare(
         'INSERT INTO projets_patrimoine (titre, slug, type_projet, description, porteur_projet, objectif_montant, statut, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, "propose", NOW())'
+         VALUES (?, ?, ?, ?, ?, ?, \'propose\', NOW())'
     );
     $stmt->execute([$titre, $slug, $typeProjet, $description, $porteur, $objectif]);
     logSecurityEvent('projet_cree', $admin['id'], ['titre' => $titre]);

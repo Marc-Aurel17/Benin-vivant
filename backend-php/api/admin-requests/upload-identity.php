@@ -50,7 +50,7 @@ if (!in_array($mime, $mimesAutorises, true)) {
 }
 
 $pdo = getPDO();
-$stmt = $pdo->prepare('SELECT id FROM demandes_inscription_admin WHERE id = ? AND statut = "etape_identite"');
+$stmt = $pdo->prepare('SELECT id FROM demandes_inscription_admin WHERE id = ? AND statut = \'etape_identite\'');
 $stmt->execute([$demandeId]);
 if (!$stmt->fetch()) {
     jsonError('Demande introuvable ou étape déjà passée.', 404);
@@ -66,7 +66,7 @@ move_uploaded_file($fichier['tmp_name'], $dossierUpload . $nomFichier);
 
 $update = $pdo->prepare(
     'UPDATE demandes_inscription_admin
-     SET piece_identite_url = ?, statut = "en_attente_validation", updated_at = NOW()
+     SET piece_identite_url = ?, statut = \'en_attente_validation\', updated_at = NOW()
      WHERE id = ?'
 );
 $update->execute(['/uploads/identites/' . $nomFichier, $demandeId]);

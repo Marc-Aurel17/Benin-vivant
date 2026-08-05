@@ -31,7 +31,7 @@ if (!$evenement) {
     jsonError('Événement introuvable.', 404);
 }
 
-$medias = $pdo->prepare('SELECT type, url, legende FROM medias WHERE mediable_type = "evenement" AND mediable_id = ? ORDER BY ordre');
+$medias = $pdo->prepare('SELECT type, url, legende FROM medias WHERE mediable_type = \'evenement\' AND mediable_id = ? ORDER BY ordre');
 $medias->execute([$evenement['id']]);
 
 $countInteresses = $pdo->prepare('SELECT COUNT(*) c FROM evenement_interesses WHERE evenement_id = ?');

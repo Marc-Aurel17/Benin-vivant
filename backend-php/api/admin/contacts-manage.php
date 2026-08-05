@@ -22,7 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'PATCH') {
         jsonError('Identifiant invalide.', 422);
     }
     $pdo = getPDO();
-    $pdo->prepare('UPDATE contacts SET statut = "lu" WHERE id = ?')->execute([$id]);
+    $pdo->prepare('UPDATE contacts SET statut = \'lu\' WHERE id = ?')->execute([$id]);
     jsonResponse(['message' => 'Marqué comme lu.']);
 }
 

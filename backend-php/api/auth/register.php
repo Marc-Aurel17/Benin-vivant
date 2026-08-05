@@ -54,7 +54,7 @@ $passwordHash = password_hash($password, PASSWORD_BCRYPT);
 
 $stmt = $pdo->prepare(
     'INSERT INTO users (uuid, nom, prenom, email, telephone, password_hash, role, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, "contributeur", NOW(), NOW())'
+     VALUES (?, ?, ?, ?, ?, ?, \'contributeur\', NOW(), NOW())'
 );
 $stmt->execute([$uuid, $nom, $prenom, $email, $telephone, $passwordHash]);
 

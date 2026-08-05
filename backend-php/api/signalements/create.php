@@ -36,7 +36,7 @@ $user = currentUser(); // peut être null (visiteur non connecté)
 $pdo = getPDO();
 $stmt = $pdo->prepare(
     'INSERT INTO signalements (user_id, type_probleme, titre, description, latitude, longitude, statut, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, "nouveau", NOW(), NOW())'
+     VALUES (?, ?, ?, ?, ?, ?, \'nouveau\', NOW(), NOW())'
 );
 $stmt->execute([$user['id'] ?? null, $type, $titre, $description, $lat, $lng]);
 

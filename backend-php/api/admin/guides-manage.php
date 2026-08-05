@@ -14,7 +14,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         'SELECT g.id, g.specialite, g.langues_parlees, g.zone_couverte, g.statut, g.created_at,
                 u.nom, u.prenom, u.email
          FROM guides_touristiques g JOIN users u ON u.id = g.user_id
-         ORDER BY FIELD(g.statut, "en_attente", "valide", "suspendu"), g.created_at DESC'
+         ORDER BY FIELD(g.statut, \'en_attente\', \'valide\', \'suspendu\'), g.created_at DESC'
     );
     jsonResponse(['data' => $stmt->fetchAll()]);
 }

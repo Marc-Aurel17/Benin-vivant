@@ -24,7 +24,7 @@ if (!$site) {
     jsonError('Site introuvable.', 404);
 }
 
-$medias = $pdo->prepare('SELECT type, url, legende FROM medias WHERE mediable_type = "site_historique" AND mediable_id = ? ORDER BY ordre');
+$medias = $pdo->prepare('SELECT type, url, legende FROM medias WHERE mediable_type = \'site_historique\' AND mediable_id = ? ORDER BY ordre');
 $medias->execute([$site['id']]);
 
 jsonResponse(['data' => [

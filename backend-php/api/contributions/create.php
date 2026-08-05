@@ -32,7 +32,7 @@ if ($errors) {
 $pdo = getPDO();
 $stmt = $pdo->prepare(
     'INSERT INTO contributions_utilisateurs (user_id, type_contribution, titre, contenu, statut, created_at)
-     VALUES (?, ?, ?, ?, "en_attente", NOW())'
+     VALUES (?, ?, ?, ?, \'en_attente\', NOW())'
 );
 $stmt->execute([$user['id'], $type, $titre, $contenu]);
 
