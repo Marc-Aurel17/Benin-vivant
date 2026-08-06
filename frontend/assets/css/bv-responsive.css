@@ -1,0 +1,214 @@
+/* =====================================================================
+   Bénin Vivant — couche responsive globale (public + admin)
+   Chargée en dernier sur toutes les pages : n'altère aucun style existant
+   sur grand écran, adapte tout le reste du très petit au très grand écran.
+   ===================================================================== */
+
+/* ---------- 1. Garde-fous anti-débordement horizontal ---------- */
+html, body { max-width: 100%; overflow-x: hidden; }
+img, svg, video, canvas, iframe { max-width: 100%; height: auto; }
+h1, h2, h3, h4, p, li, td, th, a, span, label { overflow-wrap: anywhere; word-break: normal; }
+pre, code { white-space: pre-wrap; overflow-wrap: anywhere; }
+
+/* ---------- 2. Conteneur fluide (petit -> très grand écran) ---------- */
+.wrap { width: 100%; padding-left: clamp(1rem, 4vw, 2.5rem); padding-right: clamp(1rem, 4vw, 2.5rem); }
+
+@media (min-width: 1600px) {
+  :root { --container: 1360px; }
+}
+@media (min-width: 1900px) {
+  :root { --container: 1500px; }
+}
+
+/* ---------- 3. Typographie fluide ---------- */
+@media (max-width: 900px) {
+  .section-head h2 { font-size: clamp(1.45rem, 5.2vw, 2.2rem); line-height: 1.25; }
+  .admin-topbar h1 { font-size: clamp(1.2rem, 5vw, 1.7rem); line-height: 1.25; }
+  h1 { font-size: clamp(1.6rem, 7vw, 3rem); line-height: 1.2; }
+  section { padding: 3.25rem 0; }
+}
+@media (max-width: 420px) {
+  body { font-size: 15px; }
+  section { padding: 2.5rem 0; }
+}
+
+/* ---------- 4. Grilles : dégradation progressive ---------- */
+@media (max-width: 1200px) {
+  .kpi-grid, .media-admin-grid, .gallery, .partner-grid { grid-template-columns: repeat(2, 1fr); }
+  .badge-grid { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 1000px) {
+  .card-grid, .ethnie-grid, .diag-grid, .guide-grid, .article-list,
+  .valeur-grid, .related-grid, .montant-grid { grid-template-columns: repeat(2, 1fr); }
+  .settings-grid, .article-feature, .don-layout, .carte-layout { grid-template-columns: 1fr; }
+  .footer-grid { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 760px) {
+  .stats-bar, .card-grid, .grid-2, .kpi-grid, .form-row-2, .ethnie-grid, .diag-grid,
+  .media-admin-grid, .gallery, .guide-grid, .article-list, .partner-grid, .valeur-grid,
+  .related-grid, .montant-grid, .type-grid, .upload-form, .settings-grid,
+  .article-feature, .don-layout, .carte-layout, .badge-grid, .log-row, .update-item,
+  .evt-card, .tp-item, .demande-card, .footer-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .stats-bar .stat, .card-grid .card { border-right: none; }
+  .cal-grid { font-size: .72rem; }
+}
+@media (max-width: 560px) {
+  .stats-bar { grid-template-columns: 1fr 1fr !important; }
+}
+
+/* Grilles définies en style inline (contenu généré) */
+@media (max-width: 760px) {
+  [data-bv-grid] { grid-template-columns: 1fr !important; }
+}
+
+/* ---------- 5. Flex rows qui doivent se replier ---------- */
+@media (max-width: 760px) {
+  .admin-topbar, .panel-head, .cta-band, .tile-meta, .info-row, .mini-row,
+  .transparence-row, .kpi-top, .breadcrumb, .admin-user {
+    flex-wrap: wrap;
+    gap: .6rem;
+  }
+  .admin-topbar { align-items: flex-start; }
+  .admin-search { width: 100%; }
+  .tab-bar, .filter-bar, .chip-row {
+    display: flex; flex-wrap: nowrap; overflow-x: auto;
+    -webkit-overflow-scrolling: touch; scrollbar-width: none;
+    padding-bottom: .35rem;
+  }
+  .tab-bar::-webkit-scrollbar, .filter-bar::-webkit-scrollbar { display: none; }
+  .tab, .type-tab, .filter-chip, .montant-chip, .suggestion-chip { white-space: nowrap; }
+}
+
+/* ---------- 6. Boutons & cibles tactiles ---------- */
+@media (max-width: 760px) {
+  .btn { padding: .85rem 1.2rem; font-size: .9rem; }
+  .btn-block-mobile, .form-card .btn, .btn-primary.full { width: 100%; justify-content: center; }
+  .row-action { display: inline-block; padding: .35rem 0; }
+  .row-action + .row-action { margin-left: .85rem; }
+  a, button, [role="button"], input[type="submit"] { touch-action: manipulation; }
+}
+
+/* ---------- 7. Formulaires ---------- */
+input, select, textarea { max-width: 100%; }
+@media (max-width: 760px) {
+  input, select, textarea { font-size: 16px; } /* évite le zoom auto iOS */
+  .form-group { width: 100%; }
+  .form-card { padding: 1.25rem 1.1rem; }
+}
+
+/* ---------- 8. Panneaux & cartes ---------- */
+@media (max-width: 760px) {
+  .panel-body { padding: 1.1rem 1rem; }
+  .panel-head { padding: 1rem; }
+  .card { padding: 1.5rem 1.2rem; }
+  .tile-media { height: 190px; }
+}
+
+/* ---------- 9. Tableaux : défilement puis mode carte ---------- */
+.bv-table-scroll { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.bv-table-scroll > table { min-width: 640px; }
+
+@media (max-width: 700px) {
+  .bv-table-scroll > table.admin-table { min-width: 0; }
+  table.admin-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  table.admin-table, table.admin-table tbody, table.admin-table tr, table.admin-table td { display: block; width: 100%; }
+  table.admin-table tr {
+    border: 1px solid var(--bordure); border-radius: 8px;
+    margin-bottom: .75rem; padding: .35rem .15rem; background: var(--panneau-2, transparent);
+  }
+  table.admin-table td {
+    display: grid; grid-template-columns: minmax(0, 42%) minmax(0, 1fr);
+    gap: .75rem; align-items: start;
+    padding: .55rem .85rem; border-bottom: 1px solid var(--bordure);
+  }
+  table.admin-table tr td:last-child { border-bottom: none; }
+  table.admin-table td::before {
+    content: attr(data-label);
+    font-family: var(--mono); font-size: .66rem; letter-spacing: .06em;
+    text-transform: uppercase; color: var(--parchemin-att);
+  }
+  table.admin-table td:not([data-label]) { grid-template-columns: 1fr; }
+}
+
+/* ---------- 10. Layout admin ---------- */
+@media (max-width: 1000px) {
+  .admin-shell { grid-template-columns: 1fr; }
+  .admin-main { padding: 1.5rem clamp(1rem, 4vw, 2.2rem); max-width: 100%; }
+  /* place pour le bouton burger admin injecté en haut à gauche */
+  .admin-main { padding-top: 4.25rem; }
+}
+@media (min-width: 1001px) and (max-width: 1280px) {
+  .admin-shell { grid-template-columns: 210px 1fr; }
+  .admin-main { padding: 2rem 1.8rem; }
+}
+@media (min-width: 1600px) {
+  .admin-main { max-width: 1500px; }
+}
+
+/* Sidebar admin en tiroir sur petit écran (le script bv fournit le burger) */
+@media (max-width: 1000px) {
+  .admin-sidebar {
+    position: fixed; top: 0; left: 0; bottom: 0; width: min(84vw, 300px);
+    height: 100dvh; z-index: 220; transform: translateX(-100%);
+    transition: transform .25s ease; overflow-y: auto;
+    box-shadow: 0 0 40px rgba(0, 0, 0, .5);
+  }
+  .admin-sidebar.bv-open { display: block !important; transform: translateX(0); }
+  .bv-backdrop {
+    position: fixed; inset: 0; background: rgba(0, 0, 0, .55);
+    z-index: 210; backdrop-filter: blur(2px);
+  }
+}
+
+/* ---------- 11. Navigation publique ---------- */
+@media (max-width: 900px) {
+  .nav-inner { padding: .9rem 0; gap: .6rem; }
+  .logo { font-size: 1.05rem; }
+  .nav-cta { padding: .5rem .85rem; font-size: .78rem; }
+  .nav-links.open { max-height: 70dvh; overflow-y: auto; }
+}
+@media (max-width: 400px) {
+  .nav-cta { display: none; }
+}
+
+/* ---------- 12. Modales / overlays ---------- */
+@media (max-width: 760px) {
+  .modal, .modal-card, .dialog, .overlay-card, .drawer {
+    width: 100% !important; max-width: 100% !important;
+    max-height: 88dvh; overflow-y: auto;
+  }
+}
+
+/* ---------- 13. Confort tactile & accessibilité ---------- */
+@media (hover: none) {
+  .tile:hover, .btn-primary:hover { transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: .01ms !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+}
+:where(a, button, input, select, textarea):focus-visible {
+  outline: 2px solid var(--or, #c99a2e); outline-offset: 2px;
+}
+body.bv-no-scroll { overflow: hidden; }
+
+/* ---------- 14. Correctif : liens desktop encapsulés dans un wrapper ---------- */
+@media (max-width: 900px) {
+  .nav-links > .bv-nav-desktop-only { display: none !important; }
+  .nav-links > .nav-more-wrap { display: none !important; }
+  .nav-links { flex: 0 0 auto; }
+  .nav-burger { display: block; flex: 0 0 auto; }
+  .nav-inner { flex-wrap: nowrap; }
+  .nav-links.open > .bv-nav-mobile-only { display: block !important; }
+  .nav-links.open a { display: block; }
+}
+
+/* ---------- 15. Barre admin sur petit écran ---------- */
+@media (max-width: 760px) {
+  .admin-topbar { flex-direction: column; align-items: stretch; }
+  .admin-topbar > * { width: 100%; }
+  .admin-search { flex: 1 1 100%; width: 100%; }
+  .admin-search input { width: 100%; }
+  .admin-user { justify-content: flex-start; align-items: center; }
+}
