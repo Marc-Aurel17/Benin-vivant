@@ -325,8 +325,12 @@ table.admin-table tr:last-child td{border-bottom:none;}
 <script>
 const SOURCE_LABEL = { interne: 'Interne', unesco: 'UNESCO', officiel: 'Officiel' };
 
+let articlesCache = [];
+let editingArticleId = null;
+
 async function charger() {
   const articles = await BeninVivantAPI.adminActualitesList();
+  articlesCache = articles;
   document.getElementById('tbody').innerHTML = articles.length ? articles.map(a => `
     <tr>
       <td>${a.titre}</td>
@@ -334,12 +338,26 @@ async function charger() {
       <td><span class="status-pill ${a.publie_le ? 'ok' : 'attente'}">${a.publie_le ? 'Publié' : 'Brouillon'}</span></td>
       <td>
         <span class="row-action" onclick="togglePub(${a.id})">${a.publie_le ? 'Dépublier' : 'Publier'}</span>
+        <span class="row-action" onclick="editerArticle(${a.id})">Modifier</span>
         <span class="row-action" onclick="supprimer(${a.id})">Supprimer</span>
       </td>
     </tr>`).join('') : '<tr><td colspan="4" style="color:var(--parchemin-att);">Aucun article.</td></tr>';
 }
 async function togglePub(id) { await BeninVivantAPI.adminActualitesTogglePublication(id); charger(); }
 async function supprimer(id) { if (confirm('Supprimer cet article ?')) { await BeninVivantAPI.adminActualitesSupprimer(id); charger(); } }
+
+function editerArticle(id) {
+  const a = articlesCache.find(x => x.id === id);
+  if (!a) return;
+  editingArticleId = id;
+  document.getElementById('aTitre').value = a.titre || '';
+  document.getElementById('aResume').value = a.resume || '';
+  document.getElementById('aContenu').value = a.contenu || '';
+  document.getElementById('aSource').value = a.source;
+  document.getElementById('btnCreerActu').textContent = 'Enregistrer les modifications';
+  document.getElementById('formCreation').classList.remove('hidden');
+  document.getElementById('formCreation').scrollIntoView({ behavior: 'smooth' });
+}
 
 document.getElementById('btnCreerActu').addEventListener('click', async () => {
   const titre = document.getElementById('aTitre').value.trim();
@@ -354,7 +372,13 @@ document.getElementById('btnCreerActu').addEventListener('click', async () => {
     const up = await BeninVivantAPI.uploaderMedia(titre, 'actualites', fichier);
     imageUrl = up.url;
   }
-  await BeninVivantAPI.adminActualitesCreer({ titre, resume, contenu, source, publier, image_couverture: imageUrl });
+  if (editingArticleId) {
+    await BeninVivantAPI.adminActualitesModifier({ id: editingArticleId, titre, resume, contenu, source, image_couverture: imageUrl || undefined });
+    editingArticleId = null;
+    document.getElementById('btnCreerActu').textContent = "Créer l'article";
+  } else {
+    await BeninVivantAPI.adminActualitesCreer({ titre, resume, contenu, source, publier, image_couverture: imageUrl });
+  }
   document.getElementById('formCreation').classList.add('hidden');
   document.getElementById('aFichier').value = '';
   charger();

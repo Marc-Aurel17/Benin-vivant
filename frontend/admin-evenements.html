@@ -379,8 +379,12 @@ function formaterDateCourte(d) {
   return new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
+let evenementsCache = [];
+let editingEvenementId = null;
+
 async function chargerEvenements() {
   const evenements = await BeninVivantAPI.adminEvenementsList();
+  evenementsCache = evenements;
   const enAttente = evenements.filter(e => e.is_published == 0 && e.statut !== 'annule');
   const publies = evenements.filter(e => e.is_published == 1 && e.statut !== 'annule');
 
@@ -391,7 +395,12 @@ async function chargerEvenements() {
       <td style="font-family:var(--mono); font-size:.78rem;">${formaterDateCourte(e.date_debut)}</td>
       <td>${e.lieu_nom}</td>
       <td>${e.createur_prenom ? e.createur_prenom + ' ' + e.createur_nom : '—'}</td>
-      <td><span class="row-action" onclick="traiterEvt(${e.id},'publier')">Publier</span><span class="row-action" onclick="traiterEvt(${e.id},'rejeter')">Rejeter</span></td>
+      <td>
+        <span class="row-action" onclick="traiterEvt(${e.id},'publier')">Publier</span>
+        <span class="row-action" onclick="traiterEvt(${e.id},'rejeter')">Rejeter</span>
+        <span class="row-action" onclick="editerEvenement(${e.id})">Modifier</span>
+        <span class="row-action" onclick="supprimerEvenementAction(${e.id})" style="color:var(--rouge-vodun);">Supprimer</span>
+      </td>
     </tr>`).join('') : '<tr><td colspan="6" style="color:var(--parchemin-att);">Rien en attente.</td></tr>';
 
   document.getElementById('evtPublieTbody').innerHTML = publies.length ? publies.map(e => `
@@ -401,8 +410,37 @@ async function chargerEvenements() {
       <td style="font-family:var(--mono); font-size:.78rem;">${formaterDateCourte(e.date_debut)}</td>
       <td>${e.est_recurrent == 1 ? '<span class="status-pill ok">Annuel</span>' : '<span class="status-pill attente">Ponctuel</span>'}</td>
       <td>${e.nb_interesses}</td>
-      <td><span class="row-action" onclick="traiterEvt(${e.id},'annuler')">Annuler</span></td>
+      <td>
+        <span class="row-action" onclick="traiterEvt(${e.id},'annuler')">Annuler</span>
+        <span class="row-action" onclick="editerEvenement(${e.id})">Modifier</span>
+        <span class="row-action" onclick="supprimerEvenementAction(${e.id})" style="color:var(--rouge-vodun);">Supprimer</span>
+      </td>
     </tr>`).join('') : '<tr><td colspan="6" style="color:var(--parchemin-att);">Aucun événement publié.</td></tr>';
+}
+
+async function supprimerEvenementAction(id) {
+  if (!confirm('Supprimer cet événement définitivement ?')) return;
+  await BeninVivantAPI.supprimerEvenement(id);
+  chargerEvenements();
+}
+
+function editerEvenement(id) {
+  const e = evenementsCache.find(x => x.id === id);
+  if (!e) return;
+  editingEvenementId = id;
+  document.getElementById('evTitre').value = e.titre || '';
+  document.getElementById('evType').value = e.type_evenement || 'autre';
+  document.getElementById('evLieu').value = e.lieu_nom || '';
+  document.getElementById('evVille').value = e.ville || '';
+  document.getElementById('evDateDebut').value = (e.date_debut || '').substring(0, 10);
+  document.getElementById('evDateFin').value = e.date_fin ? e.date_fin.substring(0, 10) : '';
+  document.getElementById('evTarif').value = e.entree_tarif || '';
+  document.getElementById('evOrganisateur').value = e.organisateur || '';
+  document.getElementById('evRecurrent').checked = e.est_recurrent == 1;
+  document.getElementById('evDescription').value = e.description || '';
+  document.getElementById('btnCreerEvenement').textContent = 'Enregistrer les modifications';
+  document.getElementById('formCreationEvt').classList.remove('hidden');
+  document.getElementById('formCreationEvt').scrollIntoView({ behavior: 'smooth' });
 }
 
 async function traiterEvt(id, action) {
@@ -430,7 +468,7 @@ document.getElementById('btnCreerEvenement').addEventListener('click', async () 
     return;
   }
 
-  btn.disabled = true; btn.textContent = 'Création...';
+  btn.disabled = true; btn.textContent = editingEvenementId ? 'Enregistrement...' : 'Création...';
   try {
     let imageUrl = '';
     const fichier = document.getElementById('evFichier').files[0];
@@ -438,7 +476,7 @@ document.getElementById('btnCreerEvenement').addEventListener('click', async () 
       const up = await BeninVivantAPI.uploaderMedia(titre, 'evenements', fichier);
       imageUrl = up.url;
     }
-    await BeninVivantAPI.creerEvenementPublic({
+    const payload = {
       titre,
       description,
       type_evenement: document.getElementById('evType').value,
@@ -451,8 +489,15 @@ document.getElementById('btnCreerEvenement').addEventListener('click', async () 
       entree_tarif: document.getElementById('evTarif').value.trim(),
       organisateur: document.getElementById('evOrganisateur').value.trim(),
       image_couverture: imageUrl,
-    });
-    afficher('✓ Événement créé et publié.', true);
+    };
+    if (editingEvenementId) {
+      await BeninVivantAPI.modifierEvenement({ id: editingEvenementId, ...payload });
+      afficher('✓ Événement modifié.', true);
+      editingEvenementId = null;
+    } else {
+      await BeninVivantAPI.creerEvenementPublic(payload);
+      afficher('✓ Événement créé et publié.', true);
+    }
     ['evTitre','evLieu','evVille','evDateDebut','evDateFin','evTarif','evOrganisateur','evDescription'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('evFichier').value = '';
     document.getElementById('evRecurrent').checked = false;

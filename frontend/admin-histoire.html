@@ -360,26 +360,63 @@ table.admin-table tr:last-child td{border-bottom:none;}
 <script>
 const CATEGORIE_LABEL = { royaume_precolonial: 'Royaume précolonial', colonisation: 'Colonisation', esclavage: 'Esclavage', independance: 'Indépendance', moderne: 'Moderne' };
 
+let periodesCache = [];
+let figuresCache = [];
+let editingPeriodeId = null;
+let editingFigureId = null;
+
 async function charger() {
   const { periodes, figures } = await BeninVivantAPI.adminHistoireList();
+  periodesCache = periodes;
+  figuresCache = figures;
 
   document.getElementById('tbodyPeriodes').innerHTML = periodes.length ? periodes.map(p => `
     <tr>
       <td>${p.titre}</td>
       <td>${CATEGORIE_LABEL[p.categorie] || p.categorie}</td>
       <td style="font-family:var(--mono); font-size:.78rem;">${p.date_debut}${p.date_fin ? ' – ' + p.date_fin : ''}</td>
-      <td><span class="row-action" onclick="supprimer(${p.id},'periode')">Supprimer</span></td>
+      <td>
+        <span class="row-action" onclick="editerPeriode(${p.id})">Modifier</span>
+        <span class="row-action" onclick="supprimer(${p.id},'periode')">Supprimer</span>
+      </td>
     </tr>`).join('') : '<tr><td colspan="4" style="color:var(--parchemin-att);">Aucune période.</td></tr>';
 
   document.getElementById('tbodyFigures').innerHTML = figures.length ? figures.map(f => `
     <tr>
       <td>${f.nom}</td>
       <td>${f.periode || '—'}</td>
-      <td><span class="row-action" onclick="supprimer(${f.id},'figure')">Supprimer</span></td>
+      <td>
+        <span class="row-action" onclick="editerFigure(${f.id})">Modifier</span>
+        <span class="row-action" onclick="supprimer(${f.id},'figure')">Supprimer</span>
+      </td>
     </tr>`).join('') : '<tr><td colspan="3" style="color:var(--parchemin-att);">Aucune figure historique.</td></tr>';
 }
 
 async function supprimer(id, type) { if (confirm('Supprimer cet élément ?')) { await BeninVivantAPI.adminHistoireSupprimer(id, type); charger(); } }
+
+function editerPeriode(id) {
+  const p = periodesCache.find(x => x.id === id);
+  if (!p) return;
+  editingPeriodeId = id;
+  document.getElementById('perTitre').value = p.titre || '';
+  document.getElementById('perCategorie').value = p.categorie;
+  document.getElementById('perDebut').value = p.date_debut || '';
+  document.getElementById('perFin').value = p.date_fin || '';
+  document.getElementById('perDescription').value = p.description || '';
+  document.getElementById('btnCreerPeriode').textContent = 'Enregistrer les modifications';
+  document.getElementById('perTitre').scrollIntoView({ behavior: 'smooth' });
+}
+
+function editerFigure(id) {
+  const f = figuresCache.find(x => x.id === id);
+  if (!f) return;
+  editingFigureId = id;
+  document.getElementById('figNom').value = f.nom || '';
+  document.getElementById('figPeriode').value = f.periode || '';
+  document.getElementById('figBio').value = f.biographie || '';
+  document.getElementById('btnCreerFigure').textContent = 'Enregistrer les modifications';
+  document.getElementById('figNom').scrollIntoView({ behavior: 'smooth' });
+}
 
 document.getElementById('btnCreerPeriode').addEventListener('click', async () => {
   const titre = document.getElementById('perTitre').value.trim();
@@ -393,7 +430,14 @@ document.getElementById('btnCreerPeriode').addEventListener('click', async () =>
   const fApres = document.getElementById('perFichierApres').files[0];
   if (fAvant) imageAvant = (await BeninVivantAPI.uploaderMedia(titre + ' (avant)', 'histoire', fAvant)).url;
   if (fApres) imageApres = (await BeninVivantAPI.uploaderMedia(titre + ' (après)', 'histoire', fApres)).url;
-  await BeninVivantAPI.adminHistoireCreer({ type: 'periode', titre, categorie, date_debut: dateDebut, date_fin: dateFin, description, image_avant: imageAvant, image_apres: imageApres });
+  const payload = { type: 'periode', titre, categorie, date_debut: dateDebut, date_fin: dateFin, description, image_avant: imageAvant, image_apres: imageApres };
+  if (editingPeriodeId) {
+    await BeninVivantAPI.adminHistoireModifier({ id: editingPeriodeId, ...payload });
+    editingPeriodeId = null;
+    document.getElementById('btnCreerPeriode').textContent = 'Ajouter la période';
+  } else {
+    await BeninVivantAPI.adminHistoireCreer(payload);
+  }
   document.getElementById('perFichierAvant').value = ''; document.getElementById('perFichierApres').value = '';
   charger();
 });
@@ -406,7 +450,14 @@ document.getElementById('btnCreerFigure').addEventListener('click', async () => 
   let portraitUrl = '';
   const fichier = document.getElementById('figFichier').files[0];
   if (fichier) portraitUrl = (await BeninVivantAPI.uploaderMedia(nom, 'histoire', fichier)).url;
-  await BeninVivantAPI.adminHistoireCreer({ type: 'figure', nom, periode, biographie, portrait_url: portraitUrl });
+  const payload = { type: 'figure', nom, periode, biographie, portrait_url: portraitUrl };
+  if (editingFigureId) {
+    await BeninVivantAPI.adminHistoireModifier({ id: editingFigureId, ...payload });
+    editingFigureId = null;
+    document.getElementById('btnCreerFigure').textContent = 'Ajouter la figure';
+  } else {
+    await BeninVivantAPI.adminHistoireCreer(payload);
+  }
   document.getElementById('figFichier').value = '';
   charger();
 });

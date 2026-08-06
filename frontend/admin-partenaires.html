@@ -316,17 +316,35 @@ table.admin-table tr:last-child td{border-bottom:none;}
 <script src="assets/js/bv-api.js"></script>
 <script src="assets/js/admin-guard.js"></script>
 <script>
+let partenairesCache = [];
+let editingPartenaireId = null;
+
 async function charger() {
   const partenaires = await BeninVivantAPI.adminPartenairesList();
+  partenairesCache = partenaires;
   document.getElementById('tbody').innerHTML = partenaires.length ? partenaires.map(p => `
     <tr>
       <td>${p.nom}</td>
       <td>${p.site_web ? `<a href="${p.site_web}" target="_blank" style="color:var(--or-clair);">${p.site_web}</a>` : '—'}</td>
       <td>${p.ordre}</td>
-      <td><span class="row-action" onclick="supprimer(${p.id})">Supprimer</span></td>
+      <td>
+        <span class="row-action" onclick="editerPartenaire(${p.id})">Modifier</span>
+        <span class="row-action" onclick="supprimer(${p.id})">Supprimer</span>
+      </td>
     </tr>`).join('') : '<tr><td colspan="4" style="color:var(--parchemin-att);">Aucun partenaire.</td></tr>';
 }
 async function supprimer(id) { if (confirm('Supprimer ce partenaire ?')) { await BeninVivantAPI.adminPartenairesSupprimer(id); charger(); } }
+
+function editerPartenaire(id) {
+  const p = partenairesCache.find(x => x.id === id);
+  if (!p) return;
+  editingPartenaireId = id;
+  document.getElementById('pNom').value = p.nom || '';
+  document.getElementById('pSite').value = p.site_web || '';
+  document.getElementById('pOrdre').value = p.ordre || 0;
+  document.getElementById('btnAjouter').textContent = 'Enregistrer les modifications';
+  document.getElementById('pNom').scrollIntoView({ behavior: 'smooth' });
+}
 
 document.getElementById('btnAjouter').addEventListener('click', async () => {
   const nom = document.getElementById('pNom').value.trim();
@@ -339,7 +357,13 @@ document.getElementById('btnAjouter').addEventListener('click', async () => {
     const up = await BeninVivantAPI.uploaderMedia(nom, 'partenaires', fichier);
     logoUrl = up.url;
   }
-  await BeninVivantAPI.adminPartenairesCreer({ nom, site_web: siteWeb, ordre, logo_url: logoUrl });
+  if (editingPartenaireId) {
+    await BeninVivantAPI.adminPartenairesModifier({ id: editingPartenaireId, nom, site_web: siteWeb, ordre, logo_url: logoUrl });
+    editingPartenaireId = null;
+    document.getElementById('btnAjouter').textContent = 'Ajouter';
+  } else {
+    await BeninVivantAPI.adminPartenairesCreer({ nom, site_web: siteWeb, ordre, logo_url: logoUrl });
+  }
   document.getElementById('pNom').value = ''; document.getElementById('pSite').value = '';
   document.getElementById('pFichier').value = '';
   charger();

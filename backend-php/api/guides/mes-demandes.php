@@ -6,6 +6,30 @@ require_once __DIR__ . '/../../includes/security.php';
 
 applySecurityHeaders();
 
+if ($_SERVER['REQUEST_METHOD'] === 'PATCH') {
+    $user = requireAuth();
+    if ($user['role'] !== 'guide') jsonError('Réservé aux comptes guide.', 403);
+    requireCsrf();
+
+    $body = getJsonBody();
+    $id = isset($body['id']) ? (int) $body['id'] : 0;
+    $statut = $body['statut'] ?? '';
+    if ($id <= 0 || !in_array($statut, ['lu', 'traite'], true)) jsonError('Paramètres invalides.', 422);
+
+    $pdo = getPDO();
+    // Vérifie que la demande appartient bien à ce guide avant de la modifier
+    $verif = $pdo->prepare(
+        'SELECT d.id FROM demandes_contact_guide d
+         JOIN guides_touristiques g ON g.id = d.guide_id
+         WHERE d.id = ? AND g.user_id = ?'
+    );
+    $verif->execute([$id, $user['id']]);
+    if (!$verif->fetch()) jsonError('Demande introuvable.', 404);
+
+    $pdo->prepare('UPDATE demandes_contact_guide SET statut = ? WHERE id = ?')->execute([$statut, $id]);
+    jsonResponse(['message' => 'Statut mis à jour.']);
+}
+
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     jsonError('Méthode non autorisée.', 405);
 }

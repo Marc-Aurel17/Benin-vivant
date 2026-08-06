@@ -315,16 +315,23 @@ table.admin-table tr:last-child td{border-bottom:none;}
 <script src="assets/js/bv-api.js"></script>
 <script src="assets/js/admin-guard.js"></script>
 <script>
+let languesCache = [];
+let editingLangueId = null;
+
 async function charger() {
   const langues = await BeninVivantAPI.adminLanguesList();
+  languesCache = langues;
   document.getElementById('listeLangues').innerHTML = langues.length ? langues.map(l => `
     <div class="langue-card">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:.8rem;">
         <div><strong>${l.nom}</strong> <span style="color:var(--parchemin-att); font-size:.82rem;">— ${l.zone_geographique || ''}</span></div>
-        <span class="row-action" onclick="supprimerLangue(${l.id})">Supprimer la langue</span>
+        <div>
+          <span class="row-action" onclick="editerLangue(${l.id})">Modifier</span>
+          <span class="row-action" onclick="supprimerLangue(${l.id})">Supprimer la langue</span>
+        </div>
       </div>
       <div style="font-size:.82rem; color:var(--parchemin-att); margin-bottom:.8rem;">
-        ${l.mots.map(m => `<span style="display:inline-block; background:var(--panneau-2); border-radius:3px; padding:.2rem .6rem; margin:.2rem .3rem .2rem 0;">${m.mot_expression} = ${m.traduction_fr}</span>`).join('') || 'Aucun mot enregistré.'}
+        ${l.mots.map(m => `<span style="display:inline-flex; align-items:center; gap:.4rem; background:var(--panneau-2); border-radius:3px; padding:.2rem .6rem; margin:.2rem .3rem .2rem 0;">${m.mot_expression} = ${m.traduction_fr} <span class="row-action" style="color:var(--rouge-vodun); font-size:.75rem;" onclick="supprimerMot(${m.id})">✕</span></span>`).join('') || 'Aucun mot enregistré.'}
       </div>
       <div style="display:flex; gap:.6rem;">
         <input type="text" placeholder="Mot/expression" id="mot-${l.id}" style="flex:1; background:var(--nuit-2); border:1px solid var(--bordure); border-radius:4px; padding:.5rem .7rem; color:var(--parchemin); font-size:.82rem;">
@@ -341,7 +348,22 @@ async function ajouterMot(langueId) {
   await BeninVivantAPI.adminLanguesAjouterMot(langueId, mot, trad);
   charger();
 }
+async function supprimerMot(motId) { if (confirm('Supprimer ce mot ?')) { await BeninVivantAPI.adminLanguesSupprimer(motId, 'mot'); charger(); } }
 async function supprimerLangue(id) { if (confirm('Supprimer cette langue et tous ses mots-clés ?')) { await BeninVivantAPI.adminLanguesSupprimer(id); charger(); } }
+
+function editerLangue(id) {
+  const l = languesCache.find(x => x.id === id);
+  if (!l) return;
+  editingLangueId = id;
+  document.getElementById('lNom').value = l.nom || '';
+  document.getElementById('lZone').value = l.zone_geographique || '';
+  document.getElementById('lLat').value = l.latitude_centre || '';
+  document.getElementById('lLng').value = l.longitude_centre || '';
+  document.getElementById('lDescription').value = l.description || '';
+  document.getElementById('btnCreerLangue').textContent = 'Enregistrer les modifications';
+  document.getElementById('formLangue').classList.remove('hidden');
+  document.getElementById('formLangue').scrollIntoView({ behavior: 'smooth' });
+}
 
 document.getElementById('btnCreerLangue').addEventListener('click', async () => {
   const nom = document.getElementById('lNom').value.trim();
@@ -350,7 +372,13 @@ document.getElementById('btnCreerLangue').addEventListener('click', async () => 
   const lng = document.getElementById('lLng').value;
   const description = document.getElementById('lDescription').value.trim();
   if (!nom) { alert('Nom requis.'); return; }
-  await BeninVivantAPI.adminLanguesCreer({ nom, zone_geographique: zone, latitude_centre: lat, longitude_centre: lng, description });
+  if (editingLangueId) {
+    await BeninVivantAPI.adminLanguesModifier({ id: editingLangueId, nom, zone_geographique: zone, latitude_centre: lat, longitude_centre: lng, description });
+    editingLangueId = null;
+    document.getElementById('btnCreerLangue').textContent = 'Créer';
+  } else {
+    await BeninVivantAPI.adminLanguesCreer({ nom, zone_geographique: zone, latitude_centre: lat, longitude_centre: lng, description });
+  }
   document.getElementById('formLangue').classList.add('hidden');
   charger();
 });

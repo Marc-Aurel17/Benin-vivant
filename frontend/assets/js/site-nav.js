@@ -150,6 +150,12 @@
     });
 
     adapterBoutonEspace();
+
+    // Le bouton clair/sombre vit dans #bv-theme-slot, injecté juste au-dessus ;
+    // on appelle directement l'init plutôt que d'attendre un DOMContentLoaded
+    // qui, pour theme-toggle.js (chargé dans <head>), s'est déjà déclenché
+    // avant que ce header n'existe.
+    if (window.bvInitThemeToggle) window.bvInitThemeToggle();
   }
 
   // Un admin/super_admin n'a rien à faire sur "Mon espace" (réservé aux

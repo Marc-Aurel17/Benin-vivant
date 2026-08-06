@@ -40,6 +40,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     jsonResponse(['message' => 'Question ajoutée.'], 201);
 }
 
+if ($_SERVER['REQUEST_METHOD'] === 'PATCH') {
+    requireCsrf();
+    $body = getJsonBody();
+    $id = isset($body['id']) ? (int) $body['id'] : 0;
+    if ($id <= 0) jsonError('Identifiant invalide.', 422);
+
+    $theme = $body['theme'] ?? '';
+    $question = cleanString($body['question'] ?? '', 500);
+    $reponseA = cleanString($body['reponse_a'] ?? '', 255);
+    $reponseB = cleanString($body['reponse_b'] ?? '', 255);
+    $reponseC = cleanString($body['reponse_c'] ?? '', 255);
+    $reponseD = cleanString($body['reponse_d'] ?? '', 255);
+    $bonneReponse = $body['bonne_reponse'] ?? '';
+    $explication = cleanString($body['explication'] ?? '', 1000);
+    $niveau = $body['niveau'] ?? 'facile';
+
+    if (!in_array($theme, ['histoire', 'traditions', 'langues'], true)) jsonError('Thème invalide.', 422);
+    if ($question === '' || $reponseA === '' || $reponseB === '') jsonError('Question et au moins 2 réponses requises.', 422);
+    if (!in_array($bonneReponse, ['a', 'b', 'c', 'd'], true)) jsonError('Bonne réponse invalide.', 422);
+
+    $pdo->prepare(
+        'UPDATE quiz_questions SET theme = ?, question = ?, reponse_a = ?, reponse_b = ?, reponse_c = ?, reponse_d = ?, bonne_reponse = ?, explication = ?, niveau = ? WHERE id = ?'
+    )->execute([$theme, $question, $reponseA, $reponseB, $reponseC ?: null, $reponseD ?: null, $bonneReponse, $explication, $niveau, $id]);
+    logSecurityEvent('quiz_question_modifiee', $admin['id'], ['question_id' => $id]);
+    jsonResponse(['message' => 'Question modifiée.']);
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
     requireCsrf();
     $body = getJsonBody();

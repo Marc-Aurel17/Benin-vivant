@@ -48,11 +48,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     jsonResponse(['message' => 'Langue ajoutée.'], 201);
 }
 
+if ($_SERVER['REQUEST_METHOD'] === 'PATCH') {
+    requireCsrf();
+    $body = getJsonBody();
+    $id = isset($body['id']) ? (int) $body['id'] : 0;
+    $type = $body['type'] ?? 'langue';
+    if ($id <= 0) jsonError('Identifiant invalide.', 422);
+
+    if ($type === 'mot') {
+        $mot = cleanString($body['mot_expression'] ?? '', 200);
+        $traduction = cleanString($body['traduction_fr'] ?? '', 200);
+        if ($mot === '' || $traduction === '') jsonError('Mot et traduction requis.', 422);
+        $pdo->prepare('UPDATE mots_langue SET mot_expression = ?, traduction_fr = ? WHERE id = ?')
+            ->execute([$mot, $traduction, $id]);
+        jsonResponse(['message' => 'Mot modifié.']);
+    }
+
+    $nom = cleanString($body['nom'] ?? '', 100);
+    $zone = cleanString($body['zone_geographique'] ?? '', 200);
+    $lat = isset($body['latitude_centre']) ? (float) $body['latitude_centre'] : null;
+    $lng = isset($body['longitude_centre']) ? (float) $body['longitude_centre'] : null;
+    $description = cleanString($body['description'] ?? '', 1000);
+    if ($nom === '') jsonError('Nom de la langue requis.', 422);
+
+    $pdo->prepare('UPDATE langues SET nom = ?, zone_geographique = ?, latitude_centre = ?, longitude_centre = ?, description = ? WHERE id = ?')
+        ->execute([$nom, $zone, $lat, $lng, $description, $id]);
+    logSecurityEvent('langue_modifiee', $admin['id'], ['langue_id' => $id]);
+    jsonResponse(['message' => 'Langue modifiée.']);
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
     requireCsrf();
     $body = getJsonBody();
     $id = isset($body['id']) ? (int) $body['id'] : 0;
+    $type = $body['type'] ?? 'langue';
     if ($id <= 0) jsonError('Identifiant invalide.', 422);
+
+    if ($type === 'mot') {
+        $pdo->prepare('DELETE FROM mots_langue WHERE id = ?')->execute([$id]);
+        logSecurityEvent('mot_supprime', $admin['id'], ['mot_id' => $id]);
+        jsonResponse(['message' => 'Mot supprimé.']);
+    }
 
     $pdo->prepare('DELETE FROM langues WHERE id = ?')->execute([$id]); // CASCADE supprime les mots liés
     logSecurityEvent('langue_supprimee', $admin['id'], ['langue_id' => $id]);

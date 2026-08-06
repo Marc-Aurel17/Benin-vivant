@@ -54,6 +54,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     jsonResponse(['message' => 'Période ajoutée.'], 201);
 }
 
+if ($_SERVER['REQUEST_METHOD'] === 'PATCH') {
+    requireCsrf();
+    $body = getJsonBody();
+    $id = isset($body['id']) ? (int) $body['id'] : 0;
+    $type = $body['type'] ?? '';
+    if ($id <= 0) jsonError('Identifiant invalide.', 422);
+
+    if ($type === 'figure') {
+        $nom = cleanString($body['nom'] ?? '', 150);
+        $periode = cleanString($body['periode'] ?? '', 100);
+        $bio = cleanString($body['biographie'] ?? '', 3000);
+        $portraitUrl = cleanString($body['portrait_url'] ?? '', 255);
+        if ($nom === '') jsonError('Nom requis.', 422);
+
+        $pdo->prepare('UPDATE figures_historiques SET nom = ?, periode = ?, biographie = ?, portrait_url = ? WHERE id = ?')
+            ->execute([$nom, $periode, $bio, $portraitUrl ?: null, $id]);
+        jsonResponse(['message' => 'Figure historique modifiée.']);
+    }
+
+    $titre = cleanString($body['titre'] ?? '', 200);
+    $categorie = $body['categorie'] ?? '';
+    $dateDebut = isset($body['date_debut']) ? (int) $body['date_debut'] : null;
+    $dateFin = isset($body['date_fin']) && $body['date_fin'] !== '' ? (int) $body['date_fin'] : null;
+    $description = cleanString($body['description'] ?? '', 2000);
+    $ordre = isset($body['ordre_frise']) ? (int) $body['ordre_frise'] : 0;
+    $imageAvant = cleanString($body['image_avant'] ?? '', 255);
+    $imageApres = cleanString($body['image_apres'] ?? '', 255);
+    $categoriesAutorisees = ['royaume_precolonial', 'colonisation', 'esclavage', 'independance', 'moderne'];
+    if ($titre === '' || !in_array($categorie, $categoriesAutorisees, true)) {
+        jsonError('Titre et catégorie valide requis.', 422);
+    }
+
+    $pdo->prepare(
+        'UPDATE periode_evolution_benin SET titre = ?, categorie = ?, date_debut = ?, date_fin = ?, description = ?, image_avant = ?, image_apres = ?, ordre_frise = ? WHERE id = ?'
+    )->execute([$titre, $categorie, $dateDebut, $dateFin, $description, $imageAvant ?: null, $imageApres ?: null, $ordre, $id]);
+    logSecurityEvent('periode_modifiee', $admin['id'], ['id' => $id]);
+    jsonResponse(['message' => 'Période modifiée.']);
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
     requireCsrf();
     $body = getJsonBody();

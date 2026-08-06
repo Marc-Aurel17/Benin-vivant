@@ -218,6 +218,13 @@ const BeninVivantAPI = (() => {
       const data = await request('/guides/mes-demandes.php');
       return data.data;
     },
+    async guideMarquerDemande(id, statut) {
+      return request('/guides/mes-demandes.php', { method: 'PATCH', body: JSON.stringify({ id, statut }) });
+    },
+    async adminDemandesContactGuides() {
+      const data = await request('/admin/demandes-contact-guides.php');
+      return data.data;
+    },
     async listHistoire() {
       const data = await request('/histoire/list.php');
       return data.data;
@@ -293,6 +300,9 @@ const BeninVivantAPI = (() => {
     async adminActualitesSupprimer(id) {
       return request('/admin/actualites-manage.php', { method: 'DELETE', body: JSON.stringify({ id }) });
     },
+    async adminActualitesModifier(payload) {
+      return request('/admin/actualites-manage.php', { method: 'PATCH', body: JSON.stringify({ action: 'modifier', ...payload }) });
+    },
 
     // --- Partenaires (admin CRUD) ---
     async adminPartenairesList() {
@@ -304,6 +314,9 @@ const BeninVivantAPI = (() => {
     },
     async adminPartenairesSupprimer(id) {
       return request('/admin/partenaires-manage.php', { method: 'DELETE', body: JSON.stringify({ id }) });
+    },
+    async adminPartenairesModifier(payload) {
+      return request('/admin/partenaires-manage.php', { method: 'PATCH', body: JSON.stringify(payload) });
     },
 
     // --- Témoignages ---
@@ -336,8 +349,11 @@ const BeninVivantAPI = (() => {
     async adminLanguesAjouterMot(langueId, motExpression, traductionFr) {
       return request('/admin/langues-manage.php', { method: 'POST', body: JSON.stringify({ action: 'ajouter_mot', langue_id: langueId, mot_expression: motExpression, traduction_fr: traductionFr }) });
     },
-    async adminLanguesSupprimer(id) {
-      return request('/admin/langues-manage.php', { method: 'DELETE', body: JSON.stringify({ id }) });
+    async adminLanguesSupprimer(id, type = 'langue') {
+      return request('/admin/langues-manage.php', { method: 'DELETE', body: JSON.stringify({ id, type }) });
+    },
+    async adminLanguesModifier(payload) {
+      return request('/admin/langues-manage.php', { method: 'PATCH', body: JSON.stringify(payload) });
     },
 
     // --- Quiz (admin CRUD) ---
@@ -351,6 +367,9 @@ const BeninVivantAPI = (() => {
     async adminQuizSupprimer(id) {
       return request('/admin/quiz-manage.php', { method: 'DELETE', body: JSON.stringify({ id }) });
     },
+    async adminQuizModifier(payload) {
+      return request('/admin/quiz-manage.php', { method: 'PATCH', body: JSON.stringify(payload) });
+    },
 
     // --- Histoire / frise (admin CRUD) ---
     async adminHistoireList() {
@@ -362,6 +381,9 @@ const BeninVivantAPI = (() => {
     },
     async adminHistoireSupprimer(id, type) {
       return request('/admin/histoire-manage.php', { method: 'DELETE', body: JSON.stringify({ id, type }) });
+    },
+    async adminHistoireModifier(payload) {
+      return request('/admin/histoire-manage.php', { method: 'PATCH', body: JSON.stringify(payload) });
     },
 
     // --- Projets (admin CRUD) ---
@@ -461,11 +483,29 @@ const BeninVivantAPI = (() => {
     async creerSite(payload) {
       return request('/sites/create.php', { method: 'POST', body: JSON.stringify(payload) });
     },
+    async modifierSite(payload) {
+      return request('/sites/update.php', { method: 'PATCH', body: JSON.stringify(payload) });
+    },
+    async supprimerSite(id) {
+      return request('/sites/delete.php', { method: 'DELETE', body: JSON.stringify({ id }) });
+    },
     async creerEthnie(payload) {
       return request('/ethnies/create.php', { method: 'POST', body: JSON.stringify(payload) });
     },
+    async modifierEthnie(payload) {
+      return request('/ethnies/update.php', { method: 'PATCH', body: JSON.stringify(payload) });
+    },
+    async supprimerEthnie(id) {
+      return request('/ethnies/delete.php', { method: 'DELETE', body: JSON.stringify({ id }) });
+    },
     async creerEvenementPublic(payload) {
       return request('/evenements/create.php', { method: 'POST', body: JSON.stringify(payload) });
+    },
+    async modifierEvenement(payload) {
+      return request('/evenements/update.php', { method: 'PATCH', body: JSON.stringify(payload) });
+    },
+    async supprimerEvenement(id) {
+      return request('/evenements/delete.php', { method: 'DELETE', body: JSON.stringify({ id }) });
     },
     async adminContributionsList(statut = 'en_attente') {
       const data = await request(`/admin/contributions-list.php?statut=${encodeURIComponent(statut)}`);

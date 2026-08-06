@@ -377,8 +377,15 @@ table.admin-table tr:last-child td{border-bottom:none;}
 <script src="assets/js/bv-api.js"></script>
 <script src="assets/js/admin-guard.js"></script>
 <script>
+let sitesCache = [];
+let ethniesCache = [];
+let editingSiteId = null;
+let editingEthnieId = null;
+
 async function chargerContenu() {
   const { sites, ethnies } = await BeninVivantAPI.adminContenuList();
+  sitesCache = sites;
+  ethniesCache = ethnies;
 
   document.querySelector('#tableSites tbody').innerHTML = sites.map(s => `
     <tr>
@@ -387,7 +394,11 @@ async function chargerContenu() {
       <td style="font-family:var(--mono); font-size:.78rem;">${s.latitude}, ${s.longitude}</td>
       <td>${s.is_published == 1 ? '<span class="status-pill ok">Publié</span>' : '<span class="status-pill attente">En attente</span>'}</td>
       <td>${s.createur_prenom ? s.createur_prenom + ' ' + s.createur_nom : '—'}</td>
-      <td>${s.is_published == 1 ? '—' : `<span class="row-action" onclick="publierSite(${s.id})">Publier</span>`}</td>
+      <td>
+        ${s.is_published == 1 ? '' : `<span class="row-action" onclick="publierSite(${s.id})">Publier</span> `}
+        <span class="row-action" onclick="editerSite(${s.id})">Modifier</span>
+        <span class="row-action" onclick="supprimerSiteAction(${s.id})" style="color:var(--rouge-vodun);">Supprimer</span>
+      </td>
     </tr>`).join('') || '<tr><td colspan="6" style="color:var(--parchemin-att);">Aucun site.</td></tr>';
 
   document.querySelector('#tableEthnies tbody').innerHTML = ethnies.map(e => `
@@ -396,12 +407,59 @@ async function chargerContenu() {
       <td>${e.region_principale || '—'}</td>
       <td>${e.is_published == 1 ? '<span class="status-pill ok">Publié</span>' : '<span class="status-pill attente">En attente</span>'}</td>
       <td>${e.createur_prenom ? e.createur_prenom + ' ' + e.createur_nom : '—'}</td>
-      <td>${e.is_published == 1 ? '—' : `<span class="row-action" onclick="publierEthnie(${e.id})">Publier</span>`}</td>
+      <td>
+        ${e.is_published == 1 ? '' : `<span class="row-action" onclick="publierEthnie(${e.id})">Publier</span> `}
+        <span class="row-action" onclick="editerEthnie(${e.id})">Modifier</span>
+        <span class="row-action" onclick="supprimerEthnieAction(${e.id})" style="color:var(--rouge-vodun);">Supprimer</span>
+      </td>
     </tr>`).join('') || '<tr><td colspan="5" style="color:var(--parchemin-att);">Aucune ethnie.</td></tr>';
 }
 
 async function publierSite(id) { await BeninVivantAPI.publierSite(id); chargerContenu(); }
 async function publierEthnie(id) { await BeninVivantAPI.publierEthnie(id); chargerContenu(); }
+
+async function supprimerSiteAction(id) {
+  if (!confirm('Supprimer ce site définitivement ?')) return;
+  await BeninVivantAPI.supprimerSite(id);
+  chargerContenu();
+}
+async function supprimerEthnieAction(id) {
+  if (!confirm('Supprimer cette ethnie définitivement ?')) return;
+  await BeninVivantAPI.supprimerEthnie(id);
+  chargerContenu();
+}
+
+function editerSite(id) {
+  const s = sitesCache.find(x => x.id === id);
+  if (!s) return;
+  editingSiteId = id;
+  document.getElementById('sNom').value = s.nom || '';
+  document.getElementById('sVille').value = s.ville || '';
+  document.getElementById('sDepartement').value = s.departement || '';
+  document.getElementById('sDuree').value = s.duree_visite_recommandee_min || '';
+  document.getElementById('sLat').value = s.latitude || '';
+  document.getElementById('sLng').value = s.longitude || '';
+  document.getElementById('sDescription').value = s.description || '';
+  document.getElementById('sHistoire').value = s.histoire || '';
+  document.getElementById('btnCreerSite').textContent = 'Enregistrer les modifications';
+  document.getElementById('formCreationSite').classList.remove('hidden');
+  document.getElementById('formCreationSite').scrollIntoView({ behavior: 'smooth' });
+}
+
+function editerEthnie(id) {
+  const e = ethniesCache.find(x => x.id === id);
+  if (!e) return;
+  editingEthnieId = id;
+  document.getElementById('eNom').value = e.nom || '';
+  document.getElementById('eRegion').value = e.region_principale || '';
+  document.getElementById('eLangue').value = e.langue_principale || '';
+  document.getElementById('ePopulation').value = e.population_estimee || '';
+  document.getElementById('eHistoire').value = e.histoire || '';
+  document.getElementById('btnCreerEthnie').textContent = "Enregistrer les modifications";
+  document.getElementById('formCreationEthnie').classList.remove('hidden');
+  document.getElementById('formCreationEthnie').scrollIntoView({ behavior: 'smooth' });
+}
+
 
 function afficherMsg(id, texte, ok) {
   const box = document.getElementById(id);
@@ -418,33 +476,47 @@ document.getElementById('btnCreerSite').addEventListener('click', async () => {
   const lng = document.getElementById('sLng').value.trim();
   if (!nom || !lat || !lng) { afficherMsg('sMsg', 'Nom, latitude et longitude sont requis.', false); return; }
 
-  btn.disabled = true; btn.textContent = 'Création...';
-  try {
-    let imageUrl = '';
-    const fichier = document.getElementById('sFichier').files[0];
+  btn.disabled = true; btn.textContent = editingSiteId ? 'Enregistrement...' : 'Création...';
     if (fichier) {
       const up = await BeninVivantAPI.uploaderMedia(nom, 'sites', fichier);
       imageUrl = up.url;
     }
-    await BeninVivantAPI.creerSite({
-      nom,
-      description: document.getElementById('sDescription').value.trim(),
-      histoire: document.getElementById('sHistoire').value.trim(),
-      ville: document.getElementById('sVille').value.trim(),
-      departement: document.getElementById('sDepartement').value.trim(),
-      duree_visite_recommandee_min: document.getElementById('sDuree').value || null,
-      latitude: lat,
-      longitude: lng,
-      image_url: imageUrl,
-    });
-    afficherMsg('sMsg', '✓ Site créé et publié.', true);
+    if (editingSiteId) {
+      await BeninVivantAPI.modifierSite({
+        id: editingSiteId,
+        nom,
+        description: document.getElementById('sDescription').value.trim(),
+        histoire: document.getElementById('sHistoire').value.trim(),
+        ville: document.getElementById('sVille').value.trim(),
+        departement: document.getElementById('sDepartement').value.trim(),
+        duree_visite_recommandee_min: document.getElementById('sDuree').value || null,
+        latitude: lat,
+        longitude: lng,
+        image_url: imageUrl,
+      });
+      afficherMsg('sMsg', '✓ Site modifié.', true);
+      editingSiteId = null;
+    } else {
+      await BeninVivantAPI.creerSite({
+        nom,
+        description: document.getElementById('sDescription').value.trim(),
+        histoire: document.getElementById('sHistoire').value.trim(),
+        ville: document.getElementById('sVille').value.trim(),
+        departement: document.getElementById('sDepartement').value.trim(),
+        duree_visite_recommandee_min: document.getElementById('sDuree').value || null,
+        latitude: lat,
+        longitude: lng,
+        image_url: imageUrl,
+      });
+      afficherMsg('sMsg', '✓ Site créé et publié.', true);
+    }
     ['sNom','sVille','sDepartement','sDuree','sLat','sLng','sDescription','sHistoire'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('sFichier').value = '';
     chargerContenu();
   } catch (err) {
     afficherMsg('sMsg', '⚠ ' + err.message, false);
   } finally {
-    btn.disabled = false; btn.textContent = 'Créer le site';
+    btn.disabled = false; btn.textContent = editingSiteId ? 'Enregistrer les modifications' : 'Créer le site';
   }
 });
 
@@ -453,7 +525,7 @@ document.getElementById('btnCreerEthnie').addEventListener('click', async () => 
   const nom = document.getElementById('eNom').value.trim();
   if (!nom) { afficherMsg('eMsg', "Le nom de l'ethnie est requis.", false); return; }
 
-  btn.disabled = true; btn.textContent = 'Création...';
+  btn.disabled = true; btn.textContent = editingEthnieId ? 'Enregistrement...' : 'Création...';
   try {
     let imageUrl = '';
     const fichier = document.getElementById('eFichier').files[0];
@@ -461,22 +533,36 @@ document.getElementById('btnCreerEthnie').addEventListener('click', async () => 
       const up = await BeninVivantAPI.uploaderMedia(nom, 'ethnies', fichier);
       imageUrl = up.url;
     }
-    await BeninVivantAPI.creerEthnie({
-      nom,
-      region_principale: document.getElementById('eRegion').value.trim(),
-      langue_principale: document.getElementById('eLangue').value.trim(),
-      population_estimee: document.getElementById('ePopulation').value.trim(),
-      histoire: document.getElementById('eHistoire').value.trim(),
-      image_couverture: imageUrl,
-    });
-    afficherMsg('eMsg', "✓ Ethnie créée et publiée.", true);
+    if (editingEthnieId) {
+      await BeninVivantAPI.modifierEthnie({
+        id: editingEthnieId,
+        nom,
+        region_principale: document.getElementById('eRegion').value.trim(),
+        langue_principale: document.getElementById('eLangue').value.trim(),
+        population_estimee: document.getElementById('ePopulation').value.trim(),
+        histoire: document.getElementById('eHistoire').value.trim(),
+        image_couverture: imageUrl,
+      });
+      afficherMsg('eMsg', '✓ Ethnie modifiée.', true);
+      editingEthnieId = null;
+    } else {
+      await BeninVivantAPI.creerEthnie({
+        nom,
+        region_principale: document.getElementById('eRegion').value.trim(),
+        langue_principale: document.getElementById('eLangue').value.trim(),
+        population_estimee: document.getElementById('ePopulation').value.trim(),
+        histoire: document.getElementById('eHistoire').value.trim(),
+        image_couverture: imageUrl,
+      });
+      afficherMsg('eMsg', "✓ Ethnie créée et publiée.", true);
+    }
     ['eNom','eRegion','eLangue','ePopulation','eHistoire'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('eFichier').value = '';
     chargerContenu();
   } catch (err) {
     afficherMsg('eMsg', '⚠ ' + err.message, false);
   } finally {
-    btn.disabled = false; btn.textContent = "Créer l'ethnie";
+    btn.disabled = false; btn.textContent = editingEthnieId ? 'Enregistrer les modifications' : "Créer l'ethnie";
   }
 });
 

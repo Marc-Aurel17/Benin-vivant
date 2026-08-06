@@ -43,6 +43,13 @@
     slot.appendChild(bouton);
   }
 
+  // Exposé pour que site-nav.js / admin-nav.js l'appellent explicitement APRÈS
+  // avoir injecté leur HTML (le bouton vit dans #bv-theme-slot, qui n'existe
+  // pas encore au moment où le DOMContentLoaded de CE script se déclenche —
+  // ce script est chargé dans <head>, donc son DOMContentLoaded se déclenche
+  // avant celui de site-nav.js/admin-nav.js, chargés en bas de page).
+  window.bvInitThemeToggle = initBouton;
+
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initBouton);
   } else {

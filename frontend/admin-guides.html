@@ -297,6 +297,16 @@ table.admin-table tr:last-child td{border-bottom:none;}
         <tbody id="tbody"><tr><td colspan="6">Chargement...</td></tr></tbody>
       </table>
     </div></div>
+
+    <div class="panel">
+      <div class="panel-head"><h2>Demandes de contact reçues (tous guides)</h2></div>
+      <div class="panel-body">
+        <table class="admin-table">
+          <thead><tr><th>Guide</th><th>Visiteur</th><th>Contact</th><th>Message</th><th>Statut</th><th>Date</th></tr></thead>
+          <tbody id="tbodyDemandes"><tr><td colspan="6">Chargement...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
   </main>
 </div>
 <script src="assets/js/env.js"></script>
@@ -320,6 +330,18 @@ async function charger() {
         ${g.statut !== 'suspendu' ? `<span class="row-action" onclick="changer(${g.id},'suspendu')">Suspendre</span>` : `<span class="row-action" onclick="changer(${g.id},'valide')">Réactiver</span>`}
       </td>
     </tr>`).join('') : '<tr><td colspan="6" style="color:var(--parchemin-att);">Aucun guide inscrit.</td></tr>';
+
+  const demandes = await BeninVivantAPI.adminDemandesContactGuides();
+  const STATUT_DEMANDE = { nouveau: ['alerte', 'Nouveau'], lu: ['attente', 'Lu'], traite: ['ok', 'Traité'] };
+  document.getElementById('tbodyDemandes').innerHTML = demandes.length ? demandes.map(d => `
+    <tr>
+      <td>${d.guide_prenom} ${d.guide_nom}</td>
+      <td>${d.visiteur_nom}</td>
+      <td style="font-size:.8rem;">${d.visiteur_email}${d.visiteur_telephone ? '<br>' + d.visiteur_telephone : ''}</td>
+      <td style="max-width:280px; font-size:.82rem;">${d.message}</td>
+      <td><span class="status-pill ${STATUT_DEMANDE[d.statut][0]}">${STATUT_DEMANDE[d.statut][1]}</span></td>
+      <td style="font-family:var(--mono); font-size:.76rem;">${(d.created_at || '').substring(0, 10)}</td>
+    </tr>`).join('') : '<tr><td colspan="6" style="color:var(--parchemin-att);">Aucune demande reçue.</td></tr>';
 }
 async function changer(id, statut) { await BeninVivantAPI.adminGuidesProcess(id, statut); charger(); }
 gardeAdmin().then(u => { if (u) charger(); });

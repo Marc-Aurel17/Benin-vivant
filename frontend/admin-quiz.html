@@ -341,17 +341,42 @@ table.admin-table tr:last-child td{border-bottom:none;}
 const THEME_LABEL = { histoire: 'Histoire', traditions: 'Traditions', langues: 'Langues' };
 const NIVEAU_LABEL = { facile: 'Facile', moyen: 'Moyen', difficile: 'Difficile' };
 
+let questionsCache = [];
+let editingQuestionId = null;
+
 async function charger() {
   const questions = await BeninVivantAPI.adminQuizList();
+  questionsCache = questions;
   document.getElementById('tbody').innerHTML = questions.length ? questions.map(q => `
     <tr>
       <td>${THEME_LABEL[q.theme]}</td>
       <td style="max-width:360px;">${q.question}</td>
       <td>${NIVEAU_LABEL[q.niveau]}</td>
-      <td><span class="row-action" onclick="supprimer(${q.id})">Supprimer</span></td>
+      <td>
+        <span class="row-action" onclick="editerQuestion(${q.id})">Modifier</span>
+        <span class="row-action" onclick="supprimer(${q.id})">Supprimer</span>
+      </td>
     </tr>`).join('') : '<tr><td colspan="4" style="color:var(--parchemin-att);">Aucune question.</td></tr>';
 }
 async function supprimer(id) { if (confirm('Supprimer cette question ?')) { await BeninVivantAPI.adminQuizSupprimer(id); charger(); } }
+
+function editerQuestion(id) {
+  const q = questionsCache.find(x => x.id === id);
+  if (!q) return;
+  editingQuestionId = id;
+  document.getElementById('qTheme').value = q.theme;
+  document.getElementById('qNiveau').value = q.niveau;
+  document.getElementById('qQuestion').value = q.question || '';
+  document.getElementById('qA').value = q.reponse_a || '';
+  document.getElementById('qB').value = q.reponse_b || '';
+  document.getElementById('qC').value = q.reponse_c || '';
+  document.getElementById('qD').value = q.reponse_d || '';
+  document.getElementById('qBonne').value = q.bonne_reponse;
+  document.getElementById('qExplication').value = q.explication || '';
+  document.getElementById('btnCreerQuestion').textContent = 'Enregistrer les modifications';
+  document.getElementById('formQuiz').classList.remove('hidden');
+  document.getElementById('formQuiz').scrollIntoView({ behavior: 'smooth' });
+}
 
 document.getElementById('btnCreerQuestion').addEventListener('click', async () => {
   const payload = {
@@ -366,7 +391,13 @@ document.getElementById('btnCreerQuestion').addEventListener('click', async () =
     explication: document.getElementById('qExplication').value.trim(),
   };
   if (!payload.question || !payload.reponse_a || !payload.reponse_b) { alert('Question et au moins 2 réponses requises.'); return; }
-  await BeninVivantAPI.adminQuizCreer(payload);
+  if (editingQuestionId) {
+    await BeninVivantAPI.adminQuizModifier({ id: editingQuestionId, ...payload });
+    editingQuestionId = null;
+    document.getElementById('btnCreerQuestion').textContent = 'Créer la question';
+  } else {
+    await BeninVivantAPI.adminQuizCreer(payload);
+  }
   document.getElementById('formQuiz').classList.add('hidden');
   charger();
 });

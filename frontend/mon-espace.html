@@ -392,6 +392,7 @@ function afficherMessage(texte, ok) {
 }
 
 function afficherTableauDeBord(user) {
+  utilisateurCourant = user;
   document.getElementById('section-auth').style.display = 'none';
   document.getElementById('section-dashboard').style.display = 'block';
   document.getElementById('dash-avatar').textContent = (user.prenom?.[0] || '') + (user.nom?.[0] || '');
@@ -437,7 +438,22 @@ async function chargerDonneesTableauDeBord(user) {
       document.getElementById('section-guide').style.display = 'block';
       const demandes = await BeninVivantAPI.guideMesDemandes();
       document.getElementById('dash-demandes-guide').innerHTML = demandes.length
-        ? demandes.map(d => `<div class="mini-row"><span>${d.visiteur_nom} — ${d.visiteur_email}</span><span class="status-pill ${d.statut === 'nouveau' ? 'alerte' : 'ok'}">${d.statut}</span></div>`).join('')
+        ? demandes.map(d => `
+          <div class="mini-row" style="flex-direction:column; align-items:stretch; gap:.5rem; padding:1rem; border:1px solid var(--bordure); border-radius:6px; margin-bottom:.7rem;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <strong>${d.visiteur_nom}</strong>
+              <span class="status-pill ${d.statut === 'nouveau' ? 'alerte' : d.statut === 'lu' ? 'attente' : 'ok'}">${{nouveau:'Nouveau', lu:'Lu', traite:'Traité'}[d.statut] || d.statut}</span>
+            </div>
+            <div style="font-size:.85rem; color:var(--parchemin-att);">
+              📧 <a href="mailto:${d.visiteur_email}" style="color:var(--or-clair);">${d.visiteur_email}</a>
+              ${d.visiteur_telephone ? ` · 📞 ${d.visiteur_telephone}` : ''}
+            </div>
+            <p style="font-size:.88rem; margin:.3rem 0;">${d.message}</p>
+            <div style="display:flex; gap:.6rem; font-size:.78rem;">
+              ${d.statut !== 'lu' && d.statut !== 'traite' ? `<span class="row-action" onclick="marquerDemande(${d.id},'lu')">Marquer comme lu</span>` : ''}
+              ${d.statut !== 'traite' ? `<span class="row-action" onclick="marquerDemande(${d.id},'traite')">Marquer comme traité</span>` : ''}
+            </div>
+          </div>`).join('')
         : '<div class="mini-row" style="color:var(--parchemin-att);">Aucune demande de contact reçue.</div>';
     }
   } catch (err) {
@@ -446,6 +462,17 @@ async function chargerDonneesTableauDeBord(user) {
     document.getElementById('dash-badges').innerHTML = messageErreur;
     document.getElementById('dash-contributions').innerHTML = messageErreur;
     document.getElementById('dash-signalements').innerHTML = messageErreur;
+  }
+}
+
+let utilisateurCourant = null;
+
+async function marquerDemande(id, statut) {
+  try {
+    await BeninVivantAPI.guideMarquerDemande(id, statut);
+    if (utilisateurCourant) chargerDonneesTableauDeBord(utilisateurCourant);
+  } catch (err) {
+    alert('Erreur : ' + err.message);
   }
 }
 

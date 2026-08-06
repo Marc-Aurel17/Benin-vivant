@@ -65,10 +65,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'PATCH') {
 
     $champs = [];
     $valeurs = [];
-    foreach (['titre', 'resume', 'contenu', 'source'] as $champ) {
+    foreach (['titre', 'resume', 'contenu', 'source', 'image_couverture'] as $champ) {
         if (isset($body[$champ])) {
             $champs[] = "$champ = ?";
-            $valeurs[] = cleanString($body[$champ], $champ === 'contenu' ? 10000 : 500);
+            $valeurs[] = cleanString($body[$champ], $champ === 'contenu' ? 10000 : ($champ === 'image_couverture' ? 255 : 500));
         }
     }
     if (empty($champs)) jsonError('Aucune modification fournie.', 422);
