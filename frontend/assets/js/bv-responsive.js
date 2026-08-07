@@ -94,20 +94,20 @@
     enhancePublicNav();
 
     /* Le contenu admin/public est souvent rendu après un fetch : on ré-applique.
-       On se déconnecte pendant qu'on écrit dans le DOM pour ne jamais observer
-       nos propres mutations (sinon : boucle de re-déclenchement en cascade,
-       source du ralentissement / plantage constaté). */
+       Garde anti-boucle : enhanceTables()/tagInlineGrids() modifient elles-mêmes
+       le DOM (elles déplacent les <table> dans un wrapper), ce qui redéclenchait
+       cet observer indéfiniment et gelait l'onglet. On ignore donc les mutations
+       provoquées par notre propre code via le flag "applying". */
     let pending = null;
-    const observer = new MutationObserver(() => {
+    let applying = false;
+    new MutationObserver(() => {
+      if (applying) return;
       clearTimeout(pending);
-      pending = setTimeout(runEnhancements, 150);
-    });
-    function runEnhancements() {
-      observer.disconnect();
-      enhanceTables();
-      tagInlineGrids();
-      observer.observe(document.body, { childList: true, subtree: true });
-    }
-    observer.observe(document.body, { childList: true, subtree: true });
+      pending = setTimeout(() => {
+        applying = true;
+        try { enhanceTables(); tagInlineGrids(); }
+        finally { applying = false; }
+      }, 120);
+    }).observe(document.body, { childList: true, subtree: true });
   });
 })();

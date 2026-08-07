@@ -73,12 +73,17 @@
     style.id = 'bv-admin-mobile-styles';
     style.textContent = `
       .bv-admin-burger{
-        display:none; position:fixed; top:14px; left:14px; z-index:230;
+        display:none; position:fixed; top:14px; left:14px; z-index:200;
         background:var(--panneau); border:1px solid var(--bordure); color:var(--parchemin);
         width:42px; height:42px; border-radius:6px; font-size:1.2rem; cursor:pointer;
       }
       @media (max-width:1000px){
         .bv-admin-burger{display:block;}
+        .admin-sidebar.bv-open{
+          display:block !important; position:fixed; top:0; left:0; bottom:0; width:82%;
+          max-width:320px; overflow-y:auto; z-index:190; box-shadow:8px 0 30px rgba(0,0,0,.5);
+        }
+        .admin-main{padding-top:4.5rem;}
       }
     `;
     document.head.appendChild(style);
