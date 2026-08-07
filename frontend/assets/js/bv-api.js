@@ -24,11 +24,25 @@ const BeninVivantAPI = (() => {
       headers['X-CSRF-Token'] = csrfToken;
     }
 
+    // Timeout strict : sans ça, une requête qui ne répond jamais (backend en
+    // cold start, connexion réseau qui traîne) laisse la Promise en attente
+    // indéfiniment. gardeAdmin() (appelé sur CHAQUE page admin) attend cette
+    // Promise avant d'afficher quoi que ce soit : la page semble figée, puis
+    // le navigateur finit par la considérer comme plantée et propose de la
+    // fermer. 15s laisse largement le temps à un cold start Render normal.
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
+
     let response;
     try {
-      response = await fetch(`${API_BASE}${path}`, { credentials: 'include', headers, ...options });
+      response = await fetch(`${API_BASE}${path}`, { credentials: 'include', headers, signal: controller.signal, ...options });
     } catch (networkError) {
+      if (networkError.name === 'AbortError') {
+        throw new Error('Le serveur met trop de temps à répondre. Réessayez dans quelques instants.');
+      }
       throw new Error('Impossible de joindre le serveur. Vérifiez que le backend PHP est démarré.');
+    } finally {
+      clearTimeout(timeoutId);
     }
 
     const data = await response.json().catch(() => ({}));
