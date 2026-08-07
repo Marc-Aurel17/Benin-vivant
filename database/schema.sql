@@ -276,7 +276,6 @@ CREATE TABLE signalements (
     latitude DECIMAL(10,7) NULL,
     longitude DECIMAL(10,7) NULL,
     statut ENUM('nouveau','en_cours','resolu','rejete') NOT NULL DEFAULT 'nouveau',
-    photo_url VARCHAR(255) NULL,
     created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_signalement_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
