@@ -93,6 +93,7 @@
     enhanceAdminDrawer();
     enhancePublicNav();
 
+<<<<<<< HEAD
     /* Le contenu admin/public est souvent rendu après un fetch (ex: un
        tableau rempli via innerHTML après un appel API) : on doit ré-appliquer
        enhanceTables()/tagInlineGrids() à ce moment-là.
@@ -130,5 +131,13 @@
       // modifications.
       new MutationObserver(runEnhancements).observe(cible, { childList: true });
     });
+=======
+    /* Le contenu admin/public est souvent rendu après un fetch : on ré-applique. */
+    let pending = null;
+    new MutationObserver(() => {
+      clearTimeout(pending);
+      pending = setTimeout(() => { enhanceTables(); tagInlineGrids(); }, 120);
+    }).observe(document.body, { childList: true, subtree: true });
+>>>>>>> 07901c2 (Petit REtour 2)
   });
 })();

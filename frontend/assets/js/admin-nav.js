@@ -73,12 +73,17 @@
     style.id = 'bv-admin-mobile-styles';
     style.textContent = `
       .bv-admin-burger{
-        display:none; position:fixed; top:14px; left:14px; z-index:230;
+        display:none; position:fixed; top:14px; left:14px; z-index:200;
         background:var(--panneau); border:1px solid var(--bordure); color:var(--parchemin);
         width:42px; height:42px; border-radius:6px; font-size:1.2rem; cursor:pointer;
       }
       @media (max-width:1000px){
         .bv-admin-burger{display:block;}
+        .admin-sidebar.bv-open{
+          display:block !important; position:fixed; top:0; left:0; bottom:0; width:82%;
+          max-width:320px; overflow-y:auto; z-index:190; box-shadow:8px 0 30px rgba(0,0,0,.5);
+        }
+        .admin-main{padding-top:4.5rem;}
       }
     `;
     document.head.appendChild(style);
@@ -137,19 +142,7 @@
         </nav>
       </div>
       ${groupsHtml}
-      <div class="admin-nav-group" style="margin-top:auto; padding-top:1.2rem; border-top:1px solid var(--bordure);">
-        <nav class="admin-nav">
-          <a href="#" id="bv-admin-logout" style="color:var(--rouge-vodun);">Déconnexion</a>
-        </nav>
-      </div>
     `;
-
-    document.getElementById('bv-admin-logout').addEventListener('click', async (e) => {
-      e.preventDefault();
-      if (!confirm('Se déconnecter du panneau admin ?')) return;
-      try { await BeninVivantAPI.logout(); } catch (err) { console.warn(err.message); }
-      window.location.href = 'index.html';
-    });
 
     // Même raison que dans site-nav.js : appel explicite car le DOMContentLoaded
     // de theme-toggle.js (chargé dans <head>) se déclenche avant que cette

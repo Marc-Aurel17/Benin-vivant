@@ -232,13 +232,6 @@ const BeninVivantAPI = (() => {
       const data = await request('/guides/mes-demandes.php');
       return data.data;
     },
-    async guideMarquerDemande(id, statut) {
-      return request('/guides/mes-demandes.php', { method: 'PATCH', body: JSON.stringify({ id, statut }) });
-    },
-    async adminDemandesContactGuides() {
-      const data = await request('/admin/demandes-contact-guides.php');
-      return data.data;
-    },
     async listHistoire() {
       const data = await request('/histoire/list.php');
       return data.data;
