@@ -142,19 +142,7 @@
         </nav>
       </div>
       ${groupsHtml}
-      <div class="admin-nav-group" style="margin-top:auto; padding-top:1.2rem; border-top:1px solid var(--bordure);">
-        <nav class="admin-nav">
-          <a href="#" id="bv-admin-logout" style="color:var(--rouge-vodun);">Déconnexion</a>
-        </nav>
-      </div>
     `;
-
-    document.getElementById('bv-admin-logout').addEventListener('click', async (e) => {
-      e.preventDefault();
-      if (!confirm('Se déconnecter du panneau admin ?')) return;
-      try { await BeninVivantAPI.logout(); } catch (err) { console.warn(err.message); }
-      window.location.href = 'index.html';
-    });
 
     // Même raison que dans site-nav.js : appel explicite car le DOMContentLoaded
     // de theme-toggle.js (chargé dans <head>) se déclenche avant que cette
