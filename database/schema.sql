@@ -54,7 +54,8 @@ CREATE TABLE groupes_ethniques (
     created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_ethnie_creator FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL,
-    INDEX idx_slug (slug)
+    INDEX idx_slug (slug),
+    INDEX idx_is_published (is_published)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE religions_traditions (
@@ -163,7 +164,8 @@ CREATE TABLE sites_historiques (
     updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_site_creator FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL,
     INDEX idx_geo (latitude, longitude),
-    INDEX idx_slug (slug)
+    INDEX idx_slug (slug),
+    INDEX idx_is_published (is_published)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ---------------------------------------------------------------------
@@ -428,7 +430,8 @@ CREATE TABLE newsletter_abonnes (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     email VARCHAR(190) NOT NULL UNIQUE,
     actif TINYINT(1) NOT NULL DEFAULT 1,
-    created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_actif (actif)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE contacts (
@@ -438,7 +441,8 @@ CREATE TABLE contacts (
     sujet VARCHAR(200) NULL,
     message TEXT NOT NULL,
     statut ENUM('nouveau','lu','traite') NOT NULL DEFAULT 'nouveau',
-    created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_statut (statut)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE temoignages (
@@ -593,6 +597,7 @@ CREATE TABLE evenements (
     INDEX idx_dates (date_debut, date_fin),
     INDEX idx_type_evenement (type_evenement),
     INDEX idx_statut_evenement (statut),
+    INDEX idx_is_published_evenement (is_published),
     INDEX idx_geo_evenement (latitude, longitude)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
