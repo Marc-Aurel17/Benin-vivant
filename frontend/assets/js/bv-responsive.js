@@ -93,21 +93,42 @@
     enhanceAdminDrawer();
     enhancePublicNav();
 
-    /* Le contenu admin/public est souvent rendu après un fetch : on ré-applique.
-       On se déconnecte pendant qu'on écrit dans le DOM pour ne jamais observer
-       nos propres mutations (sinon : boucle de re-déclenchement en cascade,
-       source du ralentissement / plantage constaté). */
+    /* Le contenu admin/public est souvent rendu après un fetch (ex: un
+       tableau rempli via innerHTML après un appel API) : on doit ré-appliquer
+       enhanceTables()/tagInlineGrids() à ce moment-là.
+       Un MutationObserver sur tout document.body (subtree:true) est fragile :
+       il se redéclenche pour CHAQUE changement du DOM de toute la page, y
+       compris ceux produits par d'autres scripts (sidebar admin réinjectée
+       à chaque navigation, thème, etc.), ce qui peut créer une cascade de
+       ré-observations qui gèle l'onglet. On observe seulement les
+       conteneurs qui reçoivent effectivement du contenu dynamique (tbody
+       des tableaux, grilles), pas tout le document. */
     let pending = null;
-    const observer = new MutationObserver(() => {
-      clearTimeout(pending);
-      pending = setTimeout(runEnhancements, 150);
-    });
     function runEnhancements() {
-      observer.disconnect();
-      enhanceTables();
-      tagInlineGrids();
-      observer.observe(document.body, { childList: true, subtree: true });
+      clearTimeout(pending);
+      pending = setTimeout(() => {
+        enhanceTables();
+        tagInlineGrids();
+      }, 150);
     }
-    observer.observe(document.body, { childList: true, subtree: true });
+
+    // Observe chaque <tbody> présent au chargement (toutes les pages admin
+    // remplissent leur tableau via innerHTML après un appel API, mais l'id
+    // du tbody diffère d'une page à l'autre — voir admin-*.html). On observe
+    // aussi #kpiGrid quand il existe (dashboard). Jamais tout <body> : c'était
+    // la cause de la cascade de mutations qui gelait l'onglet.
+    const ciblesSurveillees = [
+      ...document.querySelectorAll('table tbody'),
+      document.getElementById('kpiGrid'),
+    ].filter(Boolean);
+
+    ciblesSurveillees.forEach((cible) => {
+      // childList seul (pas subtree) : on réagit uniquement quand des <tr>
+      // sont ajoutées/retirées (rechargement de la liste), jamais quand on
+      // pose nous-mêmes l'attribut data-label sur les <td> à l'intérieur —
+      // ça évite tout risque de re-déclenchement en cascade sur nos propres
+      // modifications.
+      new MutationObserver(runEnhancements).observe(cible, { childList: true });
+    });
   });
 })();

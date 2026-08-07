@@ -33,6 +33,13 @@ function getPDO(): PDO
             PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
             PDO::ATTR_EMULATE_PREPARES   => false, // vraies requêtes préparées côté serveur MySQL
+            // Sans ceci, une connexion qui ne répond pas (mauvais host/port,
+            // pare-feu, hôte MySQL en veille) peut bloquer PHP plusieurs
+            // dizaines de secondes voire plus avant d'échouer, ce qui gèle
+            // chaque endpoint admin et fait planter l'onglet du navigateur
+            // qui attend la réponse. 5s est largement suffisant pour une
+            // connexion qui fonctionne normalement.
+            PDO::ATTR_TIMEOUT             => 5,
         ];
 
         if (DB_SSL_CA !== '' && file_exists(DB_SSL_CA)) {
