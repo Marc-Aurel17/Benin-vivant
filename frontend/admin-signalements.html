@@ -312,8 +312,8 @@ table.admin-table tr:last-child td{border-bottom:none;}
     <div class="panel">
       <div class="panel-body">
         <table class="admin-table">
-          <thead><tr><th>Titre</th><th>Type</th><th>Localisation</th><th>Statut</th><th></th></tr></thead>
-          <tbody id="signalTbody"><tr><td colspan="5">Chargement...</td></tr></tbody>
+          <thead><tr><th>Titre</th><th>Type</th><th>Localisation</th><th>Photo</th><th>Statut</th><th></th></tr></thead>
+          <tbody id="signalTbody"><tr><td colspan="6">Chargement...</td></tr></tbody>
         </table>
       </div>
     </div>
@@ -324,6 +324,7 @@ table.admin-table tr:last-child td{border-bottom:none;}
 <script src="assets/js/bv-api.js"></script>
 <script src="assets/js/admin-guard.js"></script>
 <script>
+const UPLOADS_BASE = API_BASE.replace(/\/api$/, '');
 const PROBLEME_LABEL = { site_degrade: 'Site dégradé', monument_menace: 'Monument menacé', tradition_en_danger: 'Tradition en danger', erreur_contenu: 'Erreur de contenu' };
 const STATUT_LABEL = { nouveau: 'Nouveau', en_cours: 'En cours', resolu: 'Résolu', rejete: 'Rejeté' };
 const STATUT_CLASSE = { nouveau: 'alerte', en_cours: 'attente', resolu: 'ok', rejete: 'alerte' };
@@ -332,6 +333,9 @@ let filtreActuel = 'ouverts';
 
 function ligneSignalement(s) {
   const gps = (s.latitude && s.longitude) ? `${Number(s.latitude).toFixed(4)}, ${Number(s.longitude).toFixed(4)}` : '—';
+  const photo = s.photo_url
+    ? `<a href="${UPLOADS_BASE}${s.photo_url}" target="_blank" rel="noopener"><img src="${UPLOADS_BASE}${s.photo_url}" alt="Photo du signalement" style="width:46px; height:46px; object-fit:cover; border-radius:4px; border:1px solid var(--bordure);"></a>`
+    : '<span style="color:var(--parchemin-att);">—</span>';
   const actions = (s.statut === 'nouveau' || s.statut === 'en_cours') ? `
     <span class="row-action" onclick="changerStatut(${s.id},'en_cours')">En cours</span>
     <span class="row-action" onclick="changerStatut(${s.id},'resolu')">Résolu</span>
@@ -341,6 +345,7 @@ function ligneSignalement(s) {
     <td>${s.titre}</td>
     <td>${PROBLEME_LABEL[s.type_probleme] || s.type_probleme}</td>
     <td style="font-family:var(--mono); font-size:.78rem;">${gps}</td>
+    <td>${photo}</td>
     <td><span class="status-pill ${STATUT_CLASSE[s.statut]}">${STATUT_LABEL[s.statut]}</span></td>
     <td>${actions}</td>
   </tr>`;

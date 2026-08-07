@@ -238,8 +238,14 @@ footer{border-top:1px solid var(--bordure); padding:3.5rem 0 2rem;}
         <div id="carteSignalement"></div>
       </div>
 
-      <div class="form-group"><label>Photo (optionnel — upload à venir)</label>
-        <div style="border:1.5px dashed var(--bordure); border-radius:5px; padding:1.5rem; text-align:center; color:var(--parchemin-att); font-size:.83rem; cursor:pointer;">📎 Ajouter une photo</div>
+      <div class="form-group"><label>Photo (optionnel)</label>
+        <input type="file" id="signalPhotoInput" accept="image/jpeg,image/png,image/webp" hidden>
+        <div id="signalPhotoZone" style="border:1.5px dashed var(--bordure); border-radius:5px; padding:1.5rem; text-align:center; color:var(--parchemin-att); font-size:.83rem; cursor:pointer;" onclick="document.getElementById('signalPhotoInput').click()">📎 Ajouter une photo</div>
+        <div id="signalPhotoApercu" style="display:none; margin-top:.7rem; position:relative;">
+          <img id="signalPhotoImg" style="max-width:100%; max-height:220px; border-radius:5px; display:block;">
+          <span onclick="retirerPhotoSignalement()" style="position:absolute; top:.5rem; right:.5rem; background:rgba(0,0,0,.65); color:#fff; border-radius:50%; width:26px; height:26px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:.85rem;">✕</span>
+        </div>
+        <p style="font-size:.72rem; color:var(--parchemin-att); margin-top:.4rem;">JPG, PNG ou WebP — 5 Mo maximum.</p>
       </div>
 
       <div id="signalMessage" style="display:none; font-size:.85rem; padding:.8rem 1rem; border-radius:4px; margin-bottom:1rem;"></div>
@@ -268,6 +274,7 @@ map.on('click', (e) => {
 
 const TYPES_PROBLEME = ['site_degrade', 'monument_menace', 'tradition_en_danger', 'erreur_contenu'];
 let typeSelectionne = TYPES_PROBLEME[0];
+let photoSignalement = null;
 
 document.querySelectorAll('.type-option').forEach((el, i) => {
   el.addEventListener('click', () => {
@@ -276,6 +283,45 @@ document.querySelectorAll('.type-option').forEach((el, i) => {
     typeSelectionne = TYPES_PROBLEME[i];
   });
 });
+
+const photoInput = document.getElementById('signalPhotoInput');
+const photoZone = document.getElementById('signalPhotoZone');
+const photoApercu = document.getElementById('signalPhotoApercu');
+const photoImg = document.getElementById('signalPhotoImg');
+const msgBoxGlobal = document.getElementById('signalMessage');
+
+function afficherErreurPhoto(texte) {
+  msgBoxGlobal.style.display = 'block';
+  msgBoxGlobal.style.background = 'rgba(140,58,42,.12)';
+  msgBoxGlobal.style.color = '#e08a75';
+  msgBoxGlobal.textContent = texte;
+}
+
+photoInput.addEventListener('change', () => {
+  const fichier = photoInput.files[0];
+  if (!fichier) return;
+  if (fichier.size > 5 * 1024 * 1024) {
+    afficherErreurPhoto('Photo trop volumineuse (5 Mo maximum).');
+    photoInput.value = '';
+    return;
+  }
+  if (!['image/jpeg', 'image/png', 'image/webp'].includes(fichier.type)) {
+    afficherErreurPhoto('Format non supporté (jpg, png ou webp uniquement).');
+    photoInput.value = '';
+    return;
+  }
+  photoSignalement = fichier;
+  photoImg.src = URL.createObjectURL(fichier);
+  photoApercu.style.display = 'block';
+  photoZone.style.display = 'none';
+});
+
+function retirerPhotoSignalement() {
+  photoSignalement = null;
+  photoInput.value = '';
+  photoApercu.style.display = 'none';
+  photoZone.style.display = 'block';
+}
 
 document.getElementById('btnEnvoyerSignalement').addEventListener('click', async () => {
   const titre = document.getElementById('signalTitre').value.trim();
@@ -295,19 +341,22 @@ document.getElementById('btnEnvoyerSignalement').addEventListener('click', async
   btn.disabled = true;
 
   try {
-    const res = await BeninVivantAPI.envoyerSignalement({
-      type_probleme: typeSelectionne,
-      titre,
-      description,
-      latitude: coords?.lat,
-      longitude: coords?.lng,
-    });
+    const fd = new FormData();
+    fd.append('type_probleme', typeSelectionne);
+    fd.append('titre', titre);
+    fd.append('description', description);
+    if (coords?.lat) fd.append('latitude', coords.lat);
+    if (coords?.lng) fd.append('longitude', coords.lng);
+    if (photoSignalement) fd.append('photo', photoSignalement);
+
+    const res = await BeninVivantAPI.envoyerSignalement(fd);
     msgBox.style.display = 'block';
     msgBox.style.background = 'rgba(63,102,83,.15)';
     msgBox.style.color = '#7fb89c';
     msgBox.textContent = '✓ ' + res.message;
     document.getElementById('signalTitre').value = '';
     document.getElementById('signalDescription').value = '';
+    retirerPhotoSignalement();
     btn.textContent = 'Envoyer le signalement';
     btn.disabled = false;
   } catch (err) {

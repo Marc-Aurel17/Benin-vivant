@@ -3,9 +3,16 @@
  * pour un fonctionnement hors-ligne partiel, comme prévu au cahier des
  * charges (PWA, section 5). Les appels vers /backend-php/api/... ne sont
  * JAMAIS mis en cache : les données doivent toujours être fraîches.
+ *
+ * Stratégie : réseau d'abord, cache en secours (offline uniquement).
+ * L'ancienne stratégie "cache d'abord" servait indéfiniment les JS/CSS
+ * mis en cache lors de la première visite, même après un nouveau
+ * déploiement — c'était la cause du "ça reste toujours aussi lent/buggé
+ * après un correctif" : le navigateur ne redemandait jamais le fichier
+ * au serveur tant que le nom de cache ne changeait pas.
  */
 
-const CACHE_NAME = 'benin-vivant-v1';
+const CACHE_NAME = 'benin-vivant-v2';
 const APP_SHELL = [
   'index.html',
   'assets/js/bv-api.js',
@@ -36,17 +43,14 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Stratégie "cache d'abord, réseau en secours" pour les pages/assets statiques
+  // Réseau d'abord (toujours la dernière version du code) ; le cache ne sert
+  // que de secours si le réseau est indisponible (mode hors-ligne).
   event.respondWith(
-    caches.match(event.request).then((reponseCache) => {
-      return reponseCache || fetch(event.request).then((reponseReseau) => {
-        return caches.open(CACHE_NAME).then((cache) => {
-          if (event.request.method === 'GET' && reponseReseau.status === 200) {
-            cache.put(event.request, reponseReseau.clone());
-          }
-          return reponseReseau;
-        });
-      }).catch(() => reponseCache);
-    })
+    fetch(event.request).then((reponseReseau) => {
+      if (event.request.method === 'GET' && reponseReseau.status === 200) {
+        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, reponseReseau.clone()));
+      }
+      return reponseReseau;
+    }).catch(() => caches.match(event.request))
   );
 });

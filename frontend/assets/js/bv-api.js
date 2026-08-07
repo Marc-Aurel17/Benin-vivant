@@ -14,7 +14,10 @@ const BeninVivantAPI = (() => {
   let csrfToken = sessionStorage.getItem('bv_csrf') || null; // survit à un refresh, pas au navigateur fermé
 
   async function request(path, options = {}) {
-    const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
+    const isFormData = options.body instanceof FormData;
+    const headers = isFormData
+      ? { ...(options.headers || {}) } // laisser le navigateur fixer Content-Type + boundary
+      : { 'Content-Type': 'application/json', ...(options.headers || {}) };
     const method = (options.method || 'GET').toUpperCase();
 
     if (csrfToken && ['POST', 'PATCH', 'DELETE'].includes(method)) {
@@ -118,8 +121,8 @@ const BeninVivantAPI = (() => {
     },
 
     // --- Signalements (Module 9) ---
-    async envoyerSignalement(payload) {
-      return request('/signalements/create.php', { method: 'POST', body: JSON.stringify(payload) });
+    async envoyerSignalement(formData) {
+      return request('/signalements/create.php', { method: 'POST', body: formData });
     },
 
     // --- Contact & Newsletter ---
