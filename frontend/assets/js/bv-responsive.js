@@ -93,11 +93,21 @@
     enhanceAdminDrawer();
     enhancePublicNav();
 
-    /* Le contenu admin/public est souvent rendu après un fetch : on ré-applique. */
+    /* Le contenu admin/public est souvent rendu après un fetch : on ré-applique.
+       On se déconnecte pendant qu'on écrit dans le DOM pour ne jamais observer
+       nos propres mutations (sinon : boucle de re-déclenchement en cascade,
+       source du ralentissement / plantage constaté). */
     let pending = null;
-    new MutationObserver(() => {
+    const observer = new MutationObserver(() => {
       clearTimeout(pending);
-      pending = setTimeout(() => { enhanceTables(); tagInlineGrids(); }, 120);
-    }).observe(document.body, { childList: true, subtree: true });
+      pending = setTimeout(runEnhancements, 150);
+    });
+    function runEnhancements() {
+      observer.disconnect();
+      enhanceTables();
+      tagInlineGrids();
+      observer.observe(document.body, { childList: true, subtree: true });
+    }
+    observer.observe(document.body, { childList: true, subtree: true });
   });
 })();

@@ -170,7 +170,8 @@ input, select, textarea { max-width: 100%; }
   .nav-links.open { max-height: 70dvh; overflow-y: auto; }
 }
 @media (max-width: 400px) {
-  .nav-cta { display: none; }
+  .nav-cta { padding: .45rem .6rem; font-size: .72rem; }
+  .logo { font-size: .92rem; }
 }
 
 /* ---------- 12. Modales / overlays ---------- */
